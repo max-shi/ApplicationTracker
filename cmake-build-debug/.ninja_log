@@ -6,3 +6,5 @@
 18	4177	7616166009459560	CMakeFiles/sqlite3.dir/sqlite/sqlite3.c.obj	3144e3cf339e68c6
 25	431	7616166009539641	CMakeFiles/tracker.dir/database.cpp.obj	66fae26649c2d8f8
 4182	4255	7616166051103115	libsqlite3.a	9e105c14501876ab
+4	387	7616189916831744	CMakeFiles/tracker.dir/database.cpp.obj	66fae26649c2d8f8
+388	510	7616189920675234	tracker.exe	af480473734aa8b5

@@ -6,10 +6,21 @@
 // Global pointer for SQLite database
 static sqlite3* db = nullptr;
 
+
+// function which initialises the database connection
+// param --> database path
+// returns a boolean wether success of failure
 bool initDatabase(const std::string& dbPath) {
+    // attempt to open the SQLite connection (using the database path)
+    // rc (return code) is if the connection is valid (valid if RC = SQLITE_OK)
     int rc = sqlite3_open(dbPath.c_str(), &db);
+
+    // if the return code for the connection is valid ..
     if (rc != SQLITE_OK) {
+        // std::cerr is the standard error stream
+        // so if rc != sqlite_ok, then we add an error message.
         std::cerr << "Cannot open database: " << sqlite3_errmsg(db) << std::endl;
+        // also return false
         return false;
     }
 
@@ -23,7 +34,10 @@ bool initDatabase(const std::string& dbPath) {
         );
     )";
 
+    // errMsg will store any error message
     char* errMsg = nullptr;
+    // execute the add table command
+    // check for error code stuff, add to error stream.
     rc = sqlite3_exec(db, sql.c_str(), nullptr, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
         std::cerr << "SQL error: " << errMsg << std::endl;
@@ -32,8 +46,9 @@ bool initDatabase(const std::string& dbPath) {
     }
 
     return true;
-}
+ }
 
+// Function to log new activity
 bool logActivity(const std::string& processName, const std::string& windowTitle) {
     std::string sql = "INSERT INTO ActivityLog (processName, windowTitle) VALUES (?, ?);";
     sqlite3_stmt* stmt = nullptr;
