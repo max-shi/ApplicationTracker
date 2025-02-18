@@ -3,13 +3,16 @@
 
 #include <string>
 
-// Initializes the SQLite database (creates file and table if needed)
+// Initializes the SQLite database and creates the ActivitySession table.
 bool initDatabase(const std::string& dbPath);
 
-// Logs an activity record into the database
-bool logActivity(const std::string& processName, const std::string& windowTitle);
+// Starts a new session and returns the session id via 'sessionId'.
+bool startSession(const std::string& processName, const std::string& windowTitle, int & sessionId);
 
-// Closes the SQLite database connection
+// Ends an existing session by updating its end time.
+bool endSession(int sessionId);
+
+// Closes the database connection.
 void closeDatabase();
 
 #endif
