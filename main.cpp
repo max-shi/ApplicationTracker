@@ -1,25 +1,22 @@
 #include <iostream>
+#include <thread>
+#include <chrono>
+#include "database.h"
+#include "tracker.h"
 
-// TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 int main() {
-    // TIP Press <shortcut actionId="RenameElement"/> when your caret is at the
-    // <b>lang</b> variable name to see how CLion can help you rename it.
-    auto lang = "C++";
-    std::cout << "Hello and welcome to " << lang << "!\n";
-
-    for (int i = 1; i <= 5; i++) {
-        // TIP Press <shortcut actionId="Debug"/> to start debugging your code.
-        // We have set one <icon src="AllIcons.Debugger.Db_set_breakpoint"/>
-        // breakpoint for you, but you can always add more by pressing
-        // <shortcut actionId="ToggleLineBreakpoint"/>.
-        std::cout << "i = " << i << std::endl;
+    // Initialize SQLite database (creates file "activity_log.db")
+    if (!initDatabase("activity_log.db")) {
+        return 1;
     }
 
+    // Main loop: poll the active window periodically (every second)
+    while (true) {
+        trackActiveWindow();
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+
+    // Note: This line is not reached because of the infinite loop.
+    closeDatabase();
     return 0;
 }
-
-// TIP See CLion help at <a
-// href="https://www.jetbrains.com/help/clion/">jetbrains.com/help/clion/</a>.
-//  Also, you can try interactive lessons for CLion by selecting
-//  'Help | Learn IDE Features' from the main menu.
