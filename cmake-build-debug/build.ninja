@@ -52,7 +52,7 @@ build cmake_object_order_depends_target_sqlite3: phony || .
 build CMakeFiles/sqlite3.dir/sqlite/sqlite3.c.obj: C_COMPILER__sqlite3_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/sqlite/sqlite3.c || cmake_object_order_depends_target_sqlite3
   DEP_FILE = CMakeFiles\sqlite3.dir\sqlite\sqlite3.c.obj.d
   FLAGS = -g -fdiagnostics-color=always
-  INCLUDES = -IC:/Users/Max/CLionProjects/tracker/sqlite
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
   OBJECT_DIR = CMakeFiles\sqlite3.dir
   OBJECT_FILE_DIR = CMakeFiles\sqlite3.dir\sqlite
 
@@ -84,23 +84,72 @@ build cmake_object_order_depends_target_tracker: phony || cmake_object_order_dep
 build CMakeFiles/tracker.dir/main.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/main.cpp || cmake_object_order_depends_target_tracker
   DEP_FILE = CMakeFiles\tracker.dir\main.cpp.obj.d
   FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
-  INCLUDES = -IC:/Users/Max/CLionProjects/tracker/sqlite
-  OBJECT_DIR = CMakeFiles\tracker.dir
-  OBJECT_FILE_DIR = CMakeFiles\tracker.dir
-
-build CMakeFiles/tracker.dir/database.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/database.cpp || cmake_object_order_depends_target_tracker
-  DEP_FILE = CMakeFiles\tracker.dir\database.cpp.obj.d
-  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
-  INCLUDES = -IC:/Users/Max/CLionProjects/tracker/sqlite
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
   OBJECT_DIR = CMakeFiles\tracker.dir
   OBJECT_FILE_DIR = CMakeFiles\tracker.dir
 
 build CMakeFiles/tracker.dir/tracker.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/tracker.cpp || cmake_object_order_depends_target_tracker
   DEP_FILE = CMakeFiles\tracker.dir\tracker.cpp.obj.d
   FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
-  INCLUDES = -IC:/Users/Max/CLionProjects/tracker/sqlite
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
   OBJECT_DIR = CMakeFiles\tracker.dir
   OBJECT_FILE_DIR = CMakeFiles\tracker.dir
+
+build CMakeFiles/tracker.dir/database.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/database.cpp || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\database.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir
+
+build CMakeFiles/tracker.dir/imgui/imgui.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/imgui/imgui.cpp || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\imgui\imgui.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir\imgui
+
+build CMakeFiles/tracker.dir/imgui/imgui_draw.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/imgui/imgui_draw.cpp || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\imgui\imgui_draw.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir\imgui
+
+build CMakeFiles/tracker.dir/imgui/imgui_widgets.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/imgui/imgui_widgets.cpp || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\imgui\imgui_widgets.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir\imgui
+
+build CMakeFiles/tracker.dir/imgui/imgui_tables.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/imgui/imgui_tables.cpp || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\imgui\imgui_tables.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir\imgui
+
+build CMakeFiles/tracker.dir/imgui/imgui_demo.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/imgui/imgui_demo.cpp || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\imgui\imgui_demo.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir\imgui
+
+build CMakeFiles/tracker.dir/imgui/backends/imgui_impl_win32.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/imgui/backends/imgui_impl_win32.cpp || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\imgui\backends\imgui_impl_win32.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir\imgui\backends
+
+build CMakeFiles/tracker.dir/imgui/backends/imgui_impl_opengl3.cpp.obj: CXX_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/imgui/backends/imgui_impl_opengl3.cpp || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\imgui\backends\imgui_impl_opengl3.cpp.obj.d
+  FLAGS = -g -std=gnu++20 -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir\imgui\backends
 
 
 # =============================================================================
@@ -110,9 +159,9 @@ build CMakeFiles/tracker.dir/tracker.cpp.obj: CXX_COMPILER__tracker_unscanned_De
 #############################################
 # Link the executable tracker.exe
 
-build tracker.exe: CXX_EXECUTABLE_LINKER__tracker_Debug CMakeFiles/tracker.dir/main.cpp.obj CMakeFiles/tracker.dir/database.cpp.obj CMakeFiles/tracker.dir/tracker.cpp.obj | libsqlite3.a || libsqlite3.a
+build tracker.exe: CXX_EXECUTABLE_LINKER__tracker_Debug CMakeFiles/tracker.dir/main.cpp.obj CMakeFiles/tracker.dir/tracker.cpp.obj CMakeFiles/tracker.dir/database.cpp.obj CMakeFiles/tracker.dir/imgui/imgui.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_draw.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_widgets.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_tables.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_demo.cpp.obj CMakeFiles/tracker.dir/imgui/backends/imgui_impl_win32.cpp.obj CMakeFiles/tracker.dir/imgui/backends/imgui_impl_opengl3.cpp.obj | libsqlite3.a || libsqlite3.a
   FLAGS = -g
-  LINK_LIBRARIES = libsqlite3.a  -lpsapi  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
+  LINK_LIBRARIES = libsqlite3.a  -lopengl32  -lglu32  -lpsapi  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\tracker.dir
   POST_BUILD = cd .
   PRE_LINK = cd .
@@ -167,14 +216,14 @@ build all: phony libsqlite3.a tracker.exe
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeRCInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU-C.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU-CXX.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-C-ABI.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-C.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-CXX.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-Initialize.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-windres.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/WindowsPaths.cmake C$:/Users/Max/CLionProjects/tracker/CMakeLists.txt CMakeCache.txt CMakeFiles/3.30.5/CMakeCCompiler.cmake CMakeFiles/3.30.5/CMakeCXXCompiler.cmake CMakeFiles/3.30.5/CMakeRCCompiler.cmake CMakeFiles/3.30.5/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeRCInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU-C.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU-CXX.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/FindOpenGL.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/FindPackageMessage.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-C-ABI.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-C.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-CXX.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-Initialize.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-windres.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/WindowsPaths.cmake C$:/Users/Max/CLionProjects/tracker/CMakeLists.txt CMakeCache.txt CMakeFiles/3.30.5/CMakeCCompiler.cmake CMakeFiles/3.30.5/CMakeCXXCompiler.cmake CMakeFiles/3.30.5/CMakeRCCompiler.cmake CMakeFiles/3.30.5/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeRCInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU-C.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU-CXX.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-C-ABI.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-C.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-CXX.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-Initialize.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-windres.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/WindowsPaths.cmake C$:/Users/Max/CLionProjects/tracker/CMakeLists.txt CMakeCache.txt CMakeFiles/3.30.5/CMakeCCompiler.cmake CMakeFiles/3.30.5/CMakeCXXCompiler.cmake CMakeFiles/3.30.5/CMakeRCCompiler.cmake CMakeFiles/3.30.5/CMakeSystem.cmake: phony
+build C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCXXInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeCommonLanguageInclude.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeGenericSystem.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeInitializeConfigs.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeLanguageInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeRCInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeSystemSpecificInformation.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/CMakeSystemSpecificInitialize.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/CMakeCommonCompilerMacros.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU-C.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU-CXX.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Compiler/GNU.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/FindOpenGL.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/FindPackageHandleStandardArgs.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/FindPackageMessage.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-C-ABI.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-C.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-CXX-ABI.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU-CXX.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-GNU.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-Initialize.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows-windres.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/Windows.cmake C$:/Program$ Files/JetBrains/CLion$ 2024.3.3/bin/cmake/win/x64/share/cmake-3.30/Modules/Platform/WindowsPaths.cmake C$:/Users/Max/CLionProjects/tracker/CMakeLists.txt CMakeCache.txt CMakeFiles/3.30.5/CMakeCCompiler.cmake CMakeFiles/3.30.5/CMakeCXXCompiler.cmake CMakeFiles/3.30.5/CMakeRCCompiler.cmake CMakeFiles/3.30.5/CMakeSystem.cmake: phony
 
 
 #############################################
