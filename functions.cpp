@@ -45,6 +45,58 @@ bool getCurrentTrackedApplication(ApplicationData &appData) {
     }
 }
 
+std::string julianToCalendarString(double JD) {
+    // Adjust JD so that the day starts at midnight.
+    double J = JD + 0.5;
+    int Z = static_cast<int>(std::floor(J));
+    double F = J - Z;
+
+    int A;
+    if (Z < 2299161) {
+        A = Z;
+    } else {
+        int alpha = static_cast<int>(std::floor((Z - 1867216.25) / 36524.25));
+        A = Z + 1 + alpha - static_cast<int>(std::floor(alpha / 4.0));
+    }
+
+    int B = A + 1524;
+    int C = static_cast<int>(std::floor((B - 122.1) / 365.25));
+    int D = static_cast<int>(std::floor(365.25 * C));
+    int E = static_cast<int>(std::floor((B - D) / 30.6001));
+
+    double dayDecimal = B - D - std::floor(30.6001 * E) + F;
+    int day = static_cast<int>(dayDecimal);
+    double dayFraction = dayDecimal - day;
+
+    int month;
+    if (E < 14)
+        month = E - 1;
+    else
+        month = E - 13;
+
+    int year;
+    if (month > 2)
+        year = C - 4716;
+    else
+        year = C - 4715;
+
+    // Convert the fractional part of the day into hours, minutes, and seconds.
+    double totalSeconds = dayFraction * 86400.0;  // 86400 seconds in a day
+    int hour = static_cast<int>(totalSeconds / 3600);
+    totalSeconds -= hour * 3600;
+    int minute = static_cast<int>(totalSeconds / 60);
+    totalSeconds -= minute * 60;
+    int second = static_cast<int>(totalSeconds + 0.5);  // Round to nearest second
+
+    // Format into "YYYY-MM-DD HH:MM:SS"
+    char buf[32];
+    std::snprintf(buf, sizeof(buf), "%04d-%02d-%02d %02d:%02d:%02d",
+                  year, month, day, hour, minute, second);
+    // printf(std::string(buf).c_str());
+    return std::string(buf);
+}
+
+
 std::string getCurrentJulianDay() {
     // Get current time in local time.
     std::time_t now = std::time(nullptr);
@@ -128,6 +180,6 @@ double getTotalTimeTrackedCurrentRun(const std::string &programStartTime) {
     }
 
     sqlite3_finalize(stmt);
-    return totalDays * 86400.0; // Convert days to seconds.
+    return totalDays * 86400.0 +46800; // Convert days to seconds.
 }
 

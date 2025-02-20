@@ -178,7 +178,7 @@ int main(int, char**)
             // Display process name, window title, and start time.
             ImGui::Text("Process: %s", currentApp.processName.c_str());
             ImGui::Text("Window: %s", currentApp.windowTitle.c_str());
-            ImGui::Text("Started at: %s", currentApp.startTime.c_str());
+            ImGui::Text("Started at: %s", julianToCalendarString(std::stod(programStartTime)).c_str());
         } else {
             ImGui::Text("No active session found.");
         }

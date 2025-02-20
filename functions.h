@@ -18,6 +18,10 @@ bool getCurrentTrackedApplication(ApplicationData &appData);
 // Obtain the current timestamp, (used when the program is first launched)
 std::string getCurrentTimestamp();
 
+
+std::string julianToCalendarString(double JD);
+
+
 std::string getCurrentJulianDay();
 
 // get total time in seconds from original timestamp
