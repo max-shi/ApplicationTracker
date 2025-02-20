@@ -51,6 +51,9 @@ static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
+
+
+
 //-----------------------------------------------------------------------------
 // Main entry point of the application.
 //-----------------------------------------------------------------------------
@@ -143,6 +146,10 @@ int main(int, char**)
     // --- Main loop ---
     bool done = false;  // Main loop flag.
     MSG msg;            // Structure for Windows messages.
+
+    // start timestamp for the overall session
+    std::string programStartTime = getCurrentJulianDay();
+    printf(programStartTime.c_str());
     while (!done)
     {
         // Process all pending Windows messages.
@@ -176,6 +183,23 @@ int main(int, char**)
             ImGui::Text("No active session found.");
         }
         ImGui::End();
+
+        // --- Total Time Tracked Pane ---
+        ImGui::Begin("Total Time Tracked");
+
+        // Get the total time tracked (in seconds) since programStartTime.
+        double totalSeconds = getTotalTimeTrackedCurrentRun(programStartTime);
+
+        // Convert to hours, minutes, seconds (if desired):
+        int hours = static_cast<int>(totalSeconds) / 3600;
+        int minutes = (static_cast<int>(totalSeconds) % 3600) / 60;
+        int seconds = static_cast<int>(totalSeconds) % 60;
+
+        // Display the total time in a friendly format.
+        ImGui::Text("Total time tracked: %d hours, %d minutes, %d seconds", hours, minutes, seconds);
+
+        ImGui::End();
+
 
         // --- Rendering ---
         // Finalize the ImGui frame and prepare the draw data.

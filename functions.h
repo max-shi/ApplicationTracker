@@ -14,4 +14,12 @@ struct ApplicationData {
 // Fills appData with process name, window title, and start time.
 bool getCurrentTrackedApplication(ApplicationData &appData);
 
+
+// Obtain the current timestamp, (used when the program is first launched)
+std::string getCurrentTimestamp();
+
+std::string getCurrentJulianDay();
+
+// get total time in seconds from original timestamp
+double getTotalTimeTrackedCurrentRun(const std::string &programStartTime);
 #endif // FUNCTIONS_H

@@ -6,11 +6,10 @@
 // Global pointer for SQLite database.
 static sqlite3* db = nullptr;
 
-
+// Returns the current database handle.
 sqlite3* getDatabase() {
     return db;
 }
-
 
 bool initDatabase(const std::string& dbPath) {
     int rc = sqlite3_open(dbPath.c_str(), &db);
@@ -20,13 +19,15 @@ bool initDatabase(const std::string& dbPath) {
     }
 
     // Create the ActivitySession table if it doesn't exist.
+    // Instead of storing a DATETIME string, we store the timestamp as a REAL (julian day number)
+    // using local time. This avoids timezone issues.
     std::string sql = R"(
         CREATE TABLE IF NOT EXISTS ActivitySession (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             processName TEXT,
             windowTitle TEXT,
-            startTime DATETIME DEFAULT CURRENT_TIMESTAMP,
-            endTime DATETIME
+            startTime REAL DEFAULT (julianday('now','localtime')),
+            endTime REAL
         );
     )";
 
@@ -42,6 +43,8 @@ bool initDatabase(const std::string& dbPath) {
 }
 
 bool startSession(const std::string& processName, const std::string& windowTitle, int & sessionId) {
+    // When a new session is started, we insert processName and windowTitle.
+    // The startTime is automatically set by the DEFAULT clause.
     std::string sql = "INSERT INTO ActivitySession (processName, windowTitle) VALUES (?, ?);";
     sqlite3_stmt* stmt = nullptr;
     int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
@@ -72,7 +75,8 @@ bool endSession(int sessionId) {
     // Only update if sessionId is valid.
     if (sessionId <= 0) return false;
 
-    std::string sql = "UPDATE ActivitySession SET endTime = datetime('now') WHERE id = ?;";
+    // Update the session with the current time (as a julian day number in localtime)
+    std::string sql = "UPDATE ActivitySession SET endTime = julianday('now','localtime') WHERE id = ?;";
     sqlite3_stmt* stmt = nullptr;
     int rc = sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
