@@ -13,6 +13,7 @@
 #include <tracker.h>
 #include "functions.h"
 
+
 // Forward declaration of ImGui's Win32 message handler (defined in imgui_impl_win32.cpp).
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -200,6 +201,29 @@ int main(int, char**)
 
         ImGui::End();
 
+        ImGui::Begin("Top 10 Applications");
+        {
+            // Retrieve the top applications since the program started.
+            std::vector<ApplicationData> topApps = getTopApplications(programStartTime);
+
+            if (ImGui::BeginTable("AppsTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+                // Define columns.
+                ImGui::TableSetupColumn("Process");
+                ImGui::TableSetupColumn("Total Time (seconds)");
+                ImGui::TableHeadersRow();
+
+                // Populate table rows.
+                for (const auto &app : topApps) {
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    ImGui::Text("%s", app.processName.c_str());
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::Text("%.2f", app.totalTime);
+                }
+                ImGui::EndTable();
+            }
+        }
+        ImGui::End();
 
         // --- Rendering ---
         // Finalize the ImGui frame and prepare the draw data.

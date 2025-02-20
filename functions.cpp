@@ -6,6 +6,7 @@
 #include <string>
 #include <cstdio>
 #include <cmath>
+#include <vector>
 
 // Implementation of getCurrentTrackedApplication:
 // It queries the ActivitySession table for the active session (where endTime is NULL).
@@ -133,12 +134,64 @@ std::string getCurrentJulianDay() {
 }
 
 
-std::string getCurrentTimestamp() {
-    std::time_t now = std::time(nullptr);
-    char buf[20]; // Format: "YYYY-MM-DD HH:MM:SS"
-    std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
-    return std::string(buf);
+// std::string getCurrentTimestamp() {
+//     std::time_t now = std::time(nullptr);
+//     char buf[20]; // Format: "YYYY-MM-DD HH:MM:SS"
+//     std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+//     return std::string(buf);
+// }
+
+// Retrieve the top 10 applications (by processName) since programStartTime.
+std::vector<ApplicationData> getTopApplications(const std::string &programStartTime) {
+    std::vector<ApplicationData> results;
+    sqlite3* dbHandle = getDatabase();
+    if (!dbHandle) {
+        std::cerr << "Database not initialized.\n";
+        return results;
+    }
+
+    // SQL query: sum up session durations (in days) for each process,
+    // convert to seconds by multiplying by 86400, then limit to top 10.
+    const char* sql = R"(
+        SELECT processName, COALESCE(SUM(
+            CASE
+                WHEN endTime IS NOT NULL THEN (julianday(endTime) - julianday(startTime))
+                ELSE (julianday('now','localtime') - julianday(startTime))
+            END
+        ), 0) as total_time
+        FROM ActivitySession
+        WHERE julianday(startTime) >= julianday(?)
+        GROUP BY processName
+        ORDER BY total_time DESC
+        LIMIT 10;
+    )";
+
+    sqlite3_stmt* stmt = nullptr;
+    int rc = sqlite3_prepare_v2(dbHandle, sql, -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to prepare top applications query: "
+                  << sqlite3_errmsg(dbHandle) << std::endl;
+        return results;
+    }
+
+    // Bind the programStartTime parameter.
+    sqlite3_bind_text(stmt, 1, programStartTime.c_str(), -1, SQLITE_TRANSIENT);
+
+    // Iterate through each row in the result.
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        ApplicationData app;
+        const unsigned char* procName = sqlite3_column_text(stmt, 0);
+        double totalDays = sqlite3_column_double(stmt, 1);
+        // printf("Process: %s, TotalDays: %f\n", procName ? reinterpret_cast<const char*>(procName) : "(null)", totalDays);
+        app.processName = procName ? reinterpret_cast<const char*>(procName) : "";
+        app.totalTime = totalDays * 86400.0; // convert days to seconds
+        results.push_back(app);
+    }
+
+    sqlite3_finalize(stmt);
+    return results;
 }
+
 
 double getTotalTimeTrackedCurrentRun(const std::string &programStartTime) {
     sqlite3* dbHandle = getDatabase();
@@ -152,7 +205,7 @@ double getTotalTimeTrackedCurrentRun(const std::string &programStartTime) {
         SELECT COALESCE(SUM(
             CASE
                 WHEN endTime IS NOT NULL THEN (julianday(endTime) - julianday(startTime))
-                ELSE (julianday('now') - julianday(startTime))
+                ELSE (julianday('now','localtime') - julianday(startTime))
             END
         ), 0) as total_time
         FROM ActivitySession
@@ -180,6 +233,6 @@ double getTotalTimeTrackedCurrentRun(const std::string &programStartTime) {
     }
 
     sqlite3_finalize(stmt);
-    return totalDays * 86400.0 +46800; // Convert days to seconds.
+    return totalDays * 86400.0; // Convert days to seconds.
 }
 
