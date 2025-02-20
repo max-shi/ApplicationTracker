@@ -11,6 +11,7 @@
 #include <tchar.h>
 #include <thread>
 #include <tracker.h>
+#include "functions.h"
 
 // Forward declaration of ImGui's Win32 message handler (defined in imgui_impl_win32.cpp).
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -161,44 +162,20 @@ int main(int, char**)
         ImGui_ImplWin32_NewFrame();   // Start new frame for Win32.
         ImGui::NewFrame();            // Start a new ImGui frame.
 
-        // --- Your GUI code here ---
-        // Create a new ImGui window (a pane) with the title "Hello, world!".
-        ImGui::Begin("Hello, world!");
-        // Display some text within the pane.
-        ImGui::Text("This is a basic IMGUI pane.");
-
-        // [Add new pane here:
-        //   Example:
-        // ImGui::Begin("New Pane");
-        // ImGui::Text("Content for the new pane goes here.");
-        // ImGui::End();
-        //]
-
-        // [Add a table here:
-        //   Example:
-        //   if (ImGui::BeginTable("Table", 3))
-        //   {
-        //       ImGui::TableNextRow();
-        //       ImGui::TableSetColumnIndex(0); ImGui::Text("Column 1");
-        //       ImGui::TableSetColumnIndex(1); ImGui::Text("Column 2");
-        //       ImGui::TableSetColumnIndex(2); ImGui::Text("Column 3");
-        //       ImGui::EndTable();
-        //   }
-        //]
-
-        // [Add a pie chart here:
-        //   Note: ImGui does not have a built-in pie chart widget. You can use custom drawing via ImGui::GetWindowDrawList()
-        //   or integrate another library for charts.
-        //   Example placeholder:
-        //   ImGui::Text("Pie chart would be drawn here using custom drawing.");
-        //]
-
-        // [Add additional labels here:
-        //   Example:
-        //   ImGui::Text("Additional label or information goes here.");
-        //]
-
-        ImGui::End();  // End the "Hello, world!" window.
+        // --- New Pane: Current Tracked Application ---
+        // Call our function to retrieve the current active session from the database.
+        ApplicationData currentApp;
+        bool hasCurrentApp = getCurrentTrackedApplication(currentApp);
+        ImGui::Begin("Current Tracked Application");  // Start a new pane.
+        if (hasCurrentApp) {
+            // Display process name, window title, and start time.
+            ImGui::Text("Process: %s", currentApp.processName.c_str());
+            ImGui::Text("Window: %s", currentApp.windowTitle.c_str());
+            ImGui::Text("Started at: %s", currentApp.startTime.c_str());
+        } else {
+            ImGui::Text("No active session found.");
+        }
+        ImGui::End();
 
         // --- Rendering ---
         // Finalize the ImGui frame and prepare the draw data.

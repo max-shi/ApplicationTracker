@@ -1,6 +1,7 @@
 #ifndef DATABASE_H
 #define DATABASE_H
 
+#include <sqlite3.h>
 #include <string>
 
 // Initializes the SQLite database and creates the ActivitySession table.
@@ -14,5 +15,7 @@ bool endSession(int sessionId);
 
 // Closes the database connection.
 void closeDatabase();
+
+sqlite3* getDatabase();
 
 #endif

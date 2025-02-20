@@ -6,6 +6,12 @@
 // Global pointer for SQLite database.
 static sqlite3* db = nullptr;
 
+
+sqlite3* getDatabase() {
+    return db;
+}
+
+
 bool initDatabase(const std::string& dbPath) {
     int rc = sqlite3_open(dbPath.c_str(), &db);
     if (rc != SQLITE_OK) {

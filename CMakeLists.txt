@@ -28,6 +28,8 @@ set(SOURCES
         imgui/backends/imgui_impl_win32.cpp
         imgui/backends/imgui_impl_opengl3.cpp
         GL/gl3w.c
+        functions.cpp
+        functions.h
 )
 
 # Build SQLite as a static library from the amalgamation source.
