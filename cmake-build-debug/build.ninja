@@ -151,6 +151,13 @@ build CMakeFiles/tracker.dir/imgui/backends/imgui_impl_opengl3.cpp.obj: CXX_COMP
   OBJECT_DIR = CMakeFiles\tracker.dir
   OBJECT_FILE_DIR = CMakeFiles\tracker.dir\imgui\backends
 
+build CMakeFiles/tracker.dir/GL/gl3w.c.obj: C_COMPILER__tracker_unscanned_Debug C$:/Users/Max/CLionProjects/tracker/GL/gl3w.c || cmake_object_order_depends_target_tracker
+  DEP_FILE = CMakeFiles\tracker.dir\GL\gl3w.c.obj.d
+  FLAGS = -g -fdiagnostics-color=always
+  INCLUDES = -IC:/Users/Max/CLionProjects/tracker -IC:/Users/Max/CLionProjects/tracker/sqlite -IC:/Users/Max/CLionProjects/tracker/imgui -IC:/Users/Max/CLionProjects/tracker/imgui/backends
+  OBJECT_DIR = CMakeFiles\tracker.dir
+  OBJECT_FILE_DIR = CMakeFiles\tracker.dir\GL
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target tracker
@@ -159,7 +166,7 @@ build CMakeFiles/tracker.dir/imgui/backends/imgui_impl_opengl3.cpp.obj: CXX_COMP
 #############################################
 # Link the executable tracker.exe
 
-build tracker.exe: CXX_EXECUTABLE_LINKER__tracker_Debug CMakeFiles/tracker.dir/main.cpp.obj CMakeFiles/tracker.dir/tracker.cpp.obj CMakeFiles/tracker.dir/database.cpp.obj CMakeFiles/tracker.dir/imgui/imgui.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_draw.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_widgets.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_tables.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_demo.cpp.obj CMakeFiles/tracker.dir/imgui/backends/imgui_impl_win32.cpp.obj CMakeFiles/tracker.dir/imgui/backends/imgui_impl_opengl3.cpp.obj | libsqlite3.a || libsqlite3.a
+build tracker.exe: CXX_EXECUTABLE_LINKER__tracker_Debug CMakeFiles/tracker.dir/main.cpp.obj CMakeFiles/tracker.dir/tracker.cpp.obj CMakeFiles/tracker.dir/database.cpp.obj CMakeFiles/tracker.dir/imgui/imgui.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_draw.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_widgets.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_tables.cpp.obj CMakeFiles/tracker.dir/imgui/imgui_demo.cpp.obj CMakeFiles/tracker.dir/imgui/backends/imgui_impl_win32.cpp.obj CMakeFiles/tracker.dir/imgui/backends/imgui_impl_opengl3.cpp.obj CMakeFiles/tracker.dir/GL/gl3w.c.obj | libsqlite3.a || libsqlite3.a
   FLAGS = -g
   LINK_LIBRARIES = libsqlite3.a  -lopengl32  -lglu32  -lpsapi  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   OBJECT_DIR = CMakeFiles\tracker.dir

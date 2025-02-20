@@ -27,6 +27,7 @@ set(SOURCES
         imgui/imgui_demo.cpp  # Optional: Remove if you don't want the demo code.
         imgui/backends/imgui_impl_win32.cpp
         imgui/backends/imgui_impl_opengl3.cpp
+        GL/gl3w.c
 )
 
 # Build SQLite as a static library from the amalgamation source.
