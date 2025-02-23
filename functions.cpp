@@ -313,3 +313,40 @@ void endActiveSessions() {
         sqlite3_free(errMsg);
     }
 }
+
+// Compute the number of days tracked by the application.
+double getDaysTracked() {
+    sqlite3* dbHandle = getDatabase();
+    if (!dbHandle) {
+        std::cerr << "Database not initialized.\n";
+        return 0.0;
+    }
+    const char* sql = R"(
+        SELECT MIN(julianday(startTime)), MAX(COALESCE(endTime, julianday('now','localtime')))
+        FROM ActivitySession;
+    )";
+    sqlite3_stmt* stmt = nullptr;
+    int rc = sqlite3_prepare_v2(dbHandle, sql, -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to prepare getDaysTracked query: "
+                  << sqlite3_errmsg(dbHandle) << std::endl;
+        return 0.0;
+    }
+    double firstDay = 0.0, lastDay = 0.0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        firstDay = sqlite3_column_double(stmt, 0);
+        lastDay = sqlite3_column_double(stmt, 1);
+    }
+    sqlite3_finalize(stmt);
+    return lastDay - firstDay; // Difference in days (may be fractional).
+}
+
+// Format seconds into "H:MM:SS"
+std::string formatTime(double totalSeconds) {
+    int hours = static_cast<int>(totalSeconds) / 3600;
+    int minutes = (static_cast<int>(totalSeconds) % 3600) / 60;
+    int seconds = static_cast<int>(totalSeconds) % 60;
+    char buffer[64];
+    std::snprintf(buffer, sizeof(buffer), "%d:%02d:%02d", hours, minutes, seconds);
+    return std::string(buffer);
+}

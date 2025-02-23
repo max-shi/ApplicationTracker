@@ -23,7 +23,8 @@ std::string getCurrentTimestamp();
 
 std::string julianToCalendarString(double JD);
 void endActiveSessions();
-
+double getDaysTracked();
+std::string formatTime(double totalSeconds);
 std::string getCurrentJulianDay();
 std::string getNextDate(const std::string &date);
 // get total time in seconds from original timestamp

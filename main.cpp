@@ -64,66 +64,84 @@ void initializeCurrentDate() {
 
 void load_ImGui() {
     // --- Controls Pane ---
-        ImGui::Begin("Controls");
-        // Allow the user to enter a date. (You could later replace this with a proper date picker.)
-        ImGui::InputText("Date (YYYY-MM-DD)", selectedDate, sizeof(selectedDate));
-        if (ImGui::Button("All-time")) {
+    ImGui::Begin("Controls");
+    ImGui::InputText("Date (YYYY-MM-DD)", selectedDate, sizeof(selectedDate));
+
+    if (ImGui::Button("All-Time")) {
         mode = 0;
-        }
-        ImGui::SameLine();
-        if (ImGui::Button("Daily average")) {
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Day Total")) {
         mode = 1;
-        }
-        ImGui::End();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Daily Average")) {
+        mode = 2;
+    }
+    ImGui::End();
 
-        // --- Total Time Tracked Pane ---
-        ImGui::Begin("Total Time Tracked");
 
-        double totalSeconds = 0.0;
-        if (mode == 0) {
-        // For all-time, we use the all-time query (no filtering).
+    // --- Total Time Tracked Pane ---
+    ImGui::Begin("Total Time Tracked");
+    double totalSeconds = 0.0;
+    if (mode == 0) {
         totalSeconds = getTotalTimeTrackedCurrentRun("");
-        } else {
-        // For daily, use the selected date and the next day.
+        ImGui::Text("All-Time Tracked: %s", formatTime(totalSeconds).c_str());
+    } else if (mode == 1) {
         std::string startDate(selectedDate);
         std::string endDate = getNextDate(startDate);
         totalSeconds = getTotalTimeTrackedCurrentRun(startDate, endDate);
-        }
+        ImGui::Text("Time Tracked on %s: %s", selectedDate, formatTime(totalSeconds).c_str());
+    } else if (mode == 2) {
+        double daysTracked = getDaysTracked();
+        if (daysTracked > 0)
+            totalSeconds = getTotalTimeTrackedCurrentRun("") / 1;
+        else
+            totalSeconds = 0.0;
+        ImGui::Text("Daily Average: %s", formatTime(totalSeconds).c_str());
+    }
+    ImGui::End();
 
-        int hours = static_cast<int>(totalSeconds) / 3600;
-        int minutes = (static_cast<int>(totalSeconds) % 3600) / 60;
-        int seconds = static_cast<int>(totalSeconds) % 60;
-        ImGui::Text("Total time tracked: %d hours, %d minutes, %d seconds", hours, minutes, seconds);
-        ImGui::End();
 
-        // --- Top 10 Applications Pane ---
-        ImGui::Begin("Top 10 Applications");
-        std::vector<ApplicationData> topApps;
-        if (mode == 0) {
-        // All-time mode: no date filter.
+    // --- Top 10 Applications Pane ---
+    ImGui::Begin("Top 10 Applications");
+    std::vector<ApplicationData> topApps;
+    if (mode == 0) {
         topApps = getTopApplications("");
-        } else {
-        // Daily mode: filter between selectedDate and nextDate.
+    } else if (mode == 1) {
         std::string startDate(selectedDate);
         std::string endDate = getNextDate(startDate);
         topApps = getTopApplications(startDate, endDate);
+    } else if (mode == 2) {
+        // Get all-time totals then compute daily average per app.
+        topApps = getTopApplications("");
+        double daysTracked = getDaysTracked();
+        for (auto &app : topApps) {
+            // printf("days tracked : %f xxxx \n", daysTracked);
+            if (daysTracked > 1)
+                app.totalTime = app.totalTime / daysTracked;
+            else
+                app.totalTime = app.totalTime;
         }
+    }
 
-        if (ImGui::BeginTable("AppsTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-        ImGui::TableSetupColumn("Process");
-        ImGui::TableSetupColumn("Total Time (seconds)");
+    if (ImGui::BeginTable("AppsTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        if (mode == 2)
+            ImGui::TableSetupColumn("Process"), ImGui::TableSetupColumn("Daily Average (sec)");
+        else
+            ImGui::TableSetupColumn("Process"), ImGui::TableSetupColumn("Total Time (sec)");
         ImGui::TableHeadersRow();
 
         for (const auto &app : topApps) {
-        ImGui::TableNextRow();
-        ImGui::TableSetColumnIndex(0);
-        ImGui::Text("%s", app.processName.c_str());
-        ImGui::TableSetColumnIndex(1);
-        ImGui::Text("%.2f", app.totalTime);
+            ImGui::TableNextRow();
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("%s", app.processName.c_str());
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%.2f", app.totalTime);
         }
         ImGui::EndTable();
-        }
-        ImGui::End();
+    }
+    ImGui::End();
 }
 
 
@@ -155,7 +173,7 @@ int main(int, char**)
     // Create the window using the registered class.
     HWND hwnd = ::CreateWindow(
         wc.lpszClassName,              // The class name to use.
-        _T("Dear ImGui - Basic Pane"), // Window title.
+        _T("Application Tracker"), // Window title.
         WS_OVERLAPPEDWINDOW,           // Window style.
         100, 100,                      // Initial x and y position.
         1280, 800,                     // Width and height of the window.
