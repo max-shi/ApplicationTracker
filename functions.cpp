@@ -6,6 +6,7 @@
 #include <string>
 #include <cstdio>
 #include <cmath>
+#include <iomanip>
 #include <vector>
 
 // Implementation of getCurrentTrackedApplication:
@@ -142,7 +143,7 @@ std::string getCurrentJulianDay() {
 // }
 
 // Retrieve the top 10 applications (by processName) since programStartTime.
-std::vector<ApplicationData> getTopApplications(const std::string &programStartTime) {
+std::vector<ApplicationData> getTopApplications(const std::string &startDate, const std::string &endDate) {
     std::vector<ApplicationData> results;
     sqlite3* dbHandle = getDatabase();
     if (!dbHandle) {
@@ -150,9 +151,22 @@ std::vector<ApplicationData> getTopApplications(const std::string &programStartT
         return results;
     }
 
-    // SQL query: sum up session durations (in days) for each process,
-    // convert to seconds by multiplying by 86400, then limit to top 10.
-    const char* sql = R"(
+    // SQL for ALL-TIME (no date filter)
+    const char* sqlAllTime = R"(
+        SELECT processName, COALESCE(SUM(
+            CASE
+                WHEN endTime IS NOT NULL THEN (julianday(endTime) - julianday(startTime))
+                ELSE (julianday('now','localtime') - julianday(startTime))
+            END
+        ), 0) as total_time
+        FROM ActivitySession
+        GROUP BY processName
+        ORDER BY total_time DESC
+        LIMIT 10;
+    )";
+
+    // SQL for a specific date range
+    const char* sqlDateRange = R"(
         SELECT processName, COALESCE(SUM(
             CASE
                 WHEN endTime IS NOT NULL THEN (julianday(endTime) - julianday(startTime))
@@ -161,28 +175,39 @@ std::vector<ApplicationData> getTopApplications(const std::string &programStartT
         ), 0) as total_time
         FROM ActivitySession
         WHERE julianday(startTime) >= julianday(?)
+          AND julianday(startTime) < julianday(?)
         GROUP BY processName
         ORDER BY total_time DESC
         LIMIT 10;
     )";
 
     sqlite3_stmt* stmt = nullptr;
-    int rc = sqlite3_prepare_v2(dbHandle, sql, -1, &stmt, nullptr);
-    if (rc != SQLITE_OK) {
-        std::cerr << "Failed to prepare top applications query: "
-                  << sqlite3_errmsg(dbHandle) << std::endl;
-        return results;
+    int rc;
+    if (endDate.empty()) {
+        // Use all-time query.
+        rc = sqlite3_prepare_v2(dbHandle, sqlAllTime, -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare top applications query: "
+                      << sqlite3_errmsg(dbHandle) << std::endl;
+            return results;
+        }
+    } else {
+        // Use date-range query. Bind both startDate and endDate.
+        rc = sqlite3_prepare_v2(dbHandle, sqlDateRange, -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare top applications date range query: "
+                      << sqlite3_errmsg(dbHandle) << std::endl;
+            return results;
+        }
+        sqlite3_bind_text(stmt, 1, startDate.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, endDate.c_str(), -1, SQLITE_TRANSIENT);
     }
 
-    // Bind the programStartTime parameter.
-    sqlite3_bind_text(stmt, 1, programStartTime.c_str(), -1, SQLITE_TRANSIENT);
-
-    // Iterate through each row in the result.
+    // Process each row in the result.
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         ApplicationData app;
         const unsigned char* procName = sqlite3_column_text(stmt, 0);
         double totalDays = sqlite3_column_double(stmt, 1);
-        // printf("Process: %s, TotalDays: %f\n", procName ? reinterpret_cast<const char*>(procName) : "(null)", totalDays);
         app.processName = procName ? reinterpret_cast<const char*>(procName) : "";
         app.totalTime = totalDays * 86400.0; // convert days to seconds
         results.push_back(app);
@@ -193,15 +218,27 @@ std::vector<ApplicationData> getTopApplications(const std::string &programStartT
 }
 
 
-double getTotalTimeTrackedCurrentRun(const std::string &programStartTime) {
+
+double getTotalTimeTrackedCurrentRun(const std::string &startDate, const std::string &endDate) {
     sqlite3* dbHandle = getDatabase();
     if (!dbHandle) {
         std::cerr << "Database not initialized.\n";
         return 0.0;
     }
 
-    // Query to sum session durations only for sessions with startTime >= programStartTime.
-    const char* sql = R"(
+    // SQL for ALL-TIME
+    const char* sqlAllTime = R"(
+        SELECT COALESCE(SUM(
+            CASE
+                WHEN endTime IS NOT NULL THEN (julianday(endTime) - julianday(startTime))
+                ELSE (julianday('now','localtime') - julianday(startTime))
+            END
+        ), 0) as total_time
+        FROM ActivitySession;
+    )";
+
+    // SQL for a specific date range
+    const char* sqlDateRange = R"(
         SELECT COALESCE(SUM(
             CASE
                 WHEN endTime IS NOT NULL THEN (julianday(endTime) - julianday(startTime))
@@ -209,19 +246,29 @@ double getTotalTimeTrackedCurrentRun(const std::string &programStartTime) {
             END
         ), 0) as total_time
         FROM ActivitySession
-        WHERE julianday(startTime) >= julianday(?);
+        WHERE julianday(startTime) >= julianday(?)
+          AND julianday(startTime) < julianday(?);
     )";
 
     sqlite3_stmt* stmt = nullptr;
-    int rc = sqlite3_prepare_v2(dbHandle, sql, -1, &stmt, nullptr);
-    if (rc != SQLITE_OK) {
-        std::cerr << "Failed to prepare total time query: "
-                  << sqlite3_errmsg(dbHandle) << std::endl;
-        return 0.0;
+    int rc;
+    if (endDate.empty()) {
+        rc = sqlite3_prepare_v2(dbHandle, sqlAllTime, -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare total time query: "
+                      << sqlite3_errmsg(dbHandle) << std::endl;
+            return 0.0;
+        }
+    } else {
+        rc = sqlite3_prepare_v2(dbHandle, sqlDateRange, -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare total time date range query: "
+                      << sqlite3_errmsg(dbHandle) << std::endl;
+            return 0.0;
+        }
+        sqlite3_bind_text(stmt, 1, startDate.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, endDate.c_str(), -1, SQLITE_TRANSIENT);
     }
-
-    // Bind the programStartTime to the SQL parameter.
-    sqlite3_bind_text(stmt, 1, programStartTime.c_str(), -1, SQLITE_TRANSIENT);
 
     double totalDays = 0.0;
     rc = sqlite3_step(stmt);
@@ -231,8 +278,38 @@ double getTotalTimeTrackedCurrentRun(const std::string &programStartTime) {
         std::cerr << "Failed to retrieve total time: "
                   << sqlite3_errmsg(dbHandle) << std::endl;
     }
-
     sqlite3_finalize(stmt);
     return totalDays * 86400.0; // Convert days to seconds.
 }
 
+std::string getNextDate(const std::string &date) {
+    std::tm tm = {};
+    std::istringstream ss(date);
+    ss >> std::get_time(&tm, "%Y-%m-%d");
+    if (ss.fail()) {
+        // If parsing fails, return the original string.
+        return date;
+    }
+    tm.tm_mday += 1;
+    // Normalize the tm structure.
+    mktime(&tm);
+    char buf[11];
+    strftime(buf, sizeof(buf), "%Y-%m-%d", &tm);
+    return std::string(buf);
+}
+
+
+void endActiveSessions() {
+    sqlite3* dbHandle = getDatabase();
+    if (!dbHandle) {
+        std::cerr << "Database not initialized.\n";
+        return;
+    }
+    const char* sql = "UPDATE ActivitySession SET endTime = julianday('now','localtime') WHERE endTime IS NULL;";
+    char* errMsg = nullptr;
+    int rc = sqlite3_exec(dbHandle, sql, nullptr, nullptr, &errMsg);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Error ending active sessions: " << errMsg << std::endl;
+        sqlite3_free(errMsg);
+    }
+}

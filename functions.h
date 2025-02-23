@@ -15,17 +15,17 @@ struct ApplicationData {
 // Returns true if an active (current) session is found.
 // Fills appData with process name, window title, and start time.
 bool getCurrentTrackedApplication(ApplicationData &appData);
-std::vector<ApplicationData> getTopApplications(const std::string &programStartTime);
+std::vector<ApplicationData> getTopApplications(const std::string &startDate, const std::string &endDate = "");
 
 // Obtain the current timestamp, (used when the program is first launched)
 std::string getCurrentTimestamp();
 
 
 std::string julianToCalendarString(double JD);
-
+void endActiveSessions();
 
 std::string getCurrentJulianDay();
-
+std::string getNextDate(const std::string &date);
 // get total time in seconds from original timestamp
-double getTotalTimeTrackedCurrentRun(const std::string &programStartTime);
+double getTotalTimeTrackedCurrentRun(const std::string &startDate, const std::string &endDate = "");
 #endif // FUNCTIONS_H

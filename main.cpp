@@ -13,6 +13,9 @@
 #include <tracker.h>
 #include "functions.h"
 
+static int mode = 0; // 0 = All-time, 1 = Daily average
+static char selectedDate[11];  // Default date in YYYY-MM-DD format
+
 
 // Forward declaration of ImGui's Win32 message handler (defined in imgui_impl_win32.cpp).
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -51,8 +54,77 @@ static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     // For all other messages, use the default window procedure.
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+void initializeCurrentDate() {
+    std::time_t t = std::time(nullptr);
+    std::tm tm;
+    // For MSVC use localtime_s, for POSIX use localtime_r or simply localtime.
+    localtime_s(&tm, &t);
+    std::strftime(selectedDate, sizeof(selectedDate), "%Y-%m-%d", &tm);
+}
 
+void load_ImGui() {
+    // --- Controls Pane ---
+        ImGui::Begin("Controls");
+        // Allow the user to enter a date. (You could later replace this with a proper date picker.)
+        ImGui::InputText("Date (YYYY-MM-DD)", selectedDate, sizeof(selectedDate));
+        if (ImGui::Button("All-time")) {
+        mode = 0;
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Daily average")) {
+        mode = 1;
+        }
+        ImGui::End();
 
+        // --- Total Time Tracked Pane ---
+        ImGui::Begin("Total Time Tracked");
+
+        double totalSeconds = 0.0;
+        if (mode == 0) {
+        // For all-time, we use the all-time query (no filtering).
+        totalSeconds = getTotalTimeTrackedCurrentRun("");
+        } else {
+        // For daily, use the selected date and the next day.
+        std::string startDate(selectedDate);
+        std::string endDate = getNextDate(startDate);
+        totalSeconds = getTotalTimeTrackedCurrentRun(startDate, endDate);
+        }
+
+        int hours = static_cast<int>(totalSeconds) / 3600;
+        int minutes = (static_cast<int>(totalSeconds) % 3600) / 60;
+        int seconds = static_cast<int>(totalSeconds) % 60;
+        ImGui::Text("Total time tracked: %d hours, %d minutes, %d seconds", hours, minutes, seconds);
+        ImGui::End();
+
+        // --- Top 10 Applications Pane ---
+        ImGui::Begin("Top 10 Applications");
+        std::vector<ApplicationData> topApps;
+        if (mode == 0) {
+        // All-time mode: no date filter.
+        topApps = getTopApplications("");
+        } else {
+        // Daily mode: filter between selectedDate and nextDate.
+        std::string startDate(selectedDate);
+        std::string endDate = getNextDate(startDate);
+        topApps = getTopApplications(startDate, endDate);
+        }
+
+        if (ImGui::BeginTable("AppsTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        ImGui::TableSetupColumn("Process");
+        ImGui::TableSetupColumn("Total Time (seconds)");
+        ImGui::TableHeadersRow();
+
+        for (const auto &app : topApps) {
+        ImGui::TableNextRow();
+        ImGui::TableSetColumnIndex(0);
+        ImGui::Text("%s", app.processName.c_str());
+        ImGui::TableSetColumnIndex(1);
+        ImGui::Text("%.2f", app.totalTime);
+        }
+        ImGui::EndTable();
+        }
+        ImGui::End();
+}
 
 
 //-----------------------------------------------------------------------------
@@ -143,7 +215,7 @@ int main(int, char**)
     // Initialize the ImGui platform/renderer bindings for Win32 and OpenGL3.
     ImGui_ImplWin32_Init(hwnd);     // Initialize the Win32 backend with our window.
     ImGui_ImplOpenGL3_Init("#version 130");  // Initialize the OpenGL3 backend with the GLSL version string.
-
+    initializeCurrentDate();
     // --- Main loop ---
     bool done = false;  // Main loop flag.
     MSG msg;            // Structure for Windows messages.
@@ -168,62 +240,8 @@ int main(int, char**)
         // Start a new frame for ImGui (prepare for UI rendering).
         ImGui_ImplOpenGL3_NewFrame(); // Start new frame for OpenGL3.
         ImGui_ImplWin32_NewFrame();   // Start new frame for Win32.
-        ImGui::NewFrame();            // Start a new ImGui frame.
-
-        // --- New Pane: Current Tracked Application ---
-        // Call our function to retrieve the current active session from the database.
-        ApplicationData currentApp;
-        bool hasCurrentApp = getCurrentTrackedApplication(currentApp);
-        ImGui::Begin("Current Tracked Application");  // Start a new pane.
-        if (hasCurrentApp) {
-            // Display process name, window title, and start time.
-            ImGui::Text("Process: %s", currentApp.processName.c_str());
-            ImGui::Text("Window: %s", currentApp.windowTitle.c_str());
-            ImGui::Text("Started at: %s", julianToCalendarString(std::stod(programStartTime)).c_str());
-        } else {
-            ImGui::Text("No active session found.");
-        }
-        ImGui::End();
-
-        // --- Total Time Tracked Pane ---
-        ImGui::Begin("Total Time Tracked");
-
-        // Get the total time tracked (in seconds) since programStartTime.
-        double totalSeconds = getTotalTimeTrackedCurrentRun(programStartTime);
-
-        // Convert to hours, minutes, seconds (if desired):
-        int hours = static_cast<int>(totalSeconds) / 3600;
-        int minutes = (static_cast<int>(totalSeconds) % 3600) / 60;
-        int seconds = static_cast<int>(totalSeconds) % 60;
-
-        // Display the total time in a friendly format.
-        ImGui::Text("Total time tracked: %d hours, %d minutes, %d seconds", hours, minutes, seconds);
-
-        ImGui::End();
-
-        ImGui::Begin("Top 10 Applications");
-        {
-            // Retrieve the top applications since the program started.
-            std::vector<ApplicationData> topApps = getTopApplications(programStartTime);
-
-            if (ImGui::BeginTable("AppsTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
-                // Define columns.
-                ImGui::TableSetupColumn("Process");
-                ImGui::TableSetupColumn("Total Time (seconds)");
-                ImGui::TableHeadersRow();
-
-                // Populate table rows.
-                for (const auto &app : topApps) {
-                    ImGui::TableNextRow();
-                    ImGui::TableSetColumnIndex(0);
-                    ImGui::Text("%s", app.processName.c_str());
-                    ImGui::TableSetColumnIndex(1);
-                    ImGui::Text("%.2f", app.totalTime);
-                }
-                ImGui::EndTable();
-            }
-        }
-        ImGui::End();
+        ImGui::NewFrame();
+        load_ImGui();
 
         // --- Rendering ---
         // Finalize the ImGui frame and prepare the draw data.
@@ -254,6 +272,9 @@ int main(int, char**)
     ::ReleaseDC(hwnd, hdc);
     ::DestroyWindow(hwnd);
     ::UnregisterClass(wc.lpszClassName, wc.hInstance);
-
+    endActiveSessions();
     return 0; // Exit the application.
 }
+
+
+
