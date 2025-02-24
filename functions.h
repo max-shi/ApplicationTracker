@@ -26,7 +26,10 @@ void endActiveSessions();
 double getDaysTracked();
 std::string formatTime(double totalSeconds);
 std::string getCurrentJulianDay();
+void checkActiveSessionIntegrity();
 std::string getNextDate(const std::string &date);
+std::string getPreviousDate(const std::string &date);
+void setDefaultTheme();
 // get total time in seconds from original timestamp
 double getTotalTimeTrackedCurrentRun(const std::string &startDate, const std::string &endDate = "");
 #endif // FUNCTIONS_H

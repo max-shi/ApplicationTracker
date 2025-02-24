@@ -69,8 +69,13 @@ void initializeCurrentDate() {
 void load_ImGui() {
     // --- Controls Pane ---
     ImGui::Begin("Controls");
-    ImGui::InputText("Date (YYYY-MM-DD)", selectedDate, sizeof(selectedDate));
 
+    // Date input field.
+    ImGui::InputText("Date (YYYY-MM-DD)", selectedDate, sizeof(selectedDate));
+    //ImGui::SameLine();
+    // Button to go to the previous day.
+
+    // Mode selection buttons.
     if (ImGui::Button("All-Time")) {
         mode = 0;
     }
@@ -79,11 +84,23 @@ void load_ImGui() {
         mode = 1;
     }
     ImGui::SameLine();
+    if (ImGui::Button("<")) {
+        std::string newDate = getPreviousDate(std::string(selectedDate));
+        strncpy(selectedDate, newDate.c_str(), sizeof(selectedDate));
+        selectedDate[sizeof(selectedDate) - 1] = '\0';
+    }
+    ImGui::SameLine();
+    // Button to go to the next day.
+    if (ImGui::Button(">")) {
+        std::string newDate = getNextDate(std::string(selectedDate));
+        strncpy(selectedDate, newDate.c_str(), sizeof(selectedDate));
+        selectedDate[sizeof(selectedDate) - 1] = '\0';
+    }
+    ImGui::SameLine();
     if (ImGui::Button("Daily Average")) {
         mode = 2;
     }
     ImGui::End();
-
 
     // --- Total Time Tracked Pane ---
     ImGui::Begin("Total Time Tracked");
@@ -99,13 +116,12 @@ void load_ImGui() {
     } else if (mode == 2) {
         double daysTracked = getDaysTracked();
         if (daysTracked > 0)
-            totalSeconds = getTotalTimeTrackedCurrentRun("") / 1;
+            totalSeconds = getTotalTimeTrackedCurrentRun("") / daysTracked;
         else
             totalSeconds = 0.0;
         ImGui::Text("Daily Average: %s", formatTime(totalSeconds).c_str());
     }
     ImGui::End();
-
 
     // --- Top 10 Applications Pane ---
     ImGui::Begin("Top 10 Applications");
@@ -121,19 +137,16 @@ void load_ImGui() {
         topApps = getTopApplications("");
         double daysTracked = getDaysTracked();
         for (auto &app : topApps) {
-            // printf("days tracked : %f xxxx \n", daysTracked);
             if (daysTracked > 1)
                 app.totalTime = app.totalTime / daysTracked;
-            else
-                app.totalTime = app.totalTime;
         }
     }
 
     if (ImGui::BeginTable("AppsTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
         if (mode == 2)
-            ImGui::TableSetupColumn("Process"), ImGui::TableSetupColumn("Daily Average (sec)");
+            ImGui::TableSetupColumn("Process"), ImGui::TableSetupColumn("Daily Average");
         else
-            ImGui::TableSetupColumn("Process"), ImGui::TableSetupColumn("Total Time (sec)");
+            ImGui::TableSetupColumn("Process"), ImGui::TableSetupColumn("Total Time");
         ImGui::TableHeadersRow();
 
         for (const auto &app : topApps) {
@@ -141,7 +154,8 @@ void load_ImGui() {
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("%s", app.processName.c_str());
             ImGui::TableSetColumnIndex(1);
-            ImGui::Text("%.2f", app.totalTime);
+            // Format the total time into HH:MM:SS.
+            ImGui::Text("%s", formatTime(app.totalTime).c_str());
         }
         ImGui::EndTable();
     }
@@ -241,7 +255,7 @@ int main(int, char**)
     // --- Main loop ---
     bool done = false;  // Main loop flag.
     MSG msg;            // Structure for Windows messages.
-
+    setDefaultTheme();
     // start timestamp for the overall session
     std::string programStartTime = getCurrentJulianDay();
     printf(programStartTime.c_str());
@@ -263,7 +277,8 @@ int main(int, char**)
         ImGui_ImplWin32_NewFrame();   // Start new frame for Win32.
         ImGui::NewFrame();
         load_ImGui();
-
+        // error checking
+        checkActiveSessionIntegrity();
         // --- Rendering ---
         // Finalize the ImGui frame and prepare the draw data.
         ImGui::Render();

@@ -6,6 +6,7 @@
 #include <string>
 #include <cstdio>
 #include <cmath>
+#include <imgui.h>
 #include <iomanip>
 #include <vector>
 
@@ -298,6 +299,21 @@ std::string getNextDate(const std::string &date) {
     return std::string(buf);
 }
 
+std::string getPreviousDate(const std::string &date) {
+    std::tm tm = {};
+    std::istringstream ss(date);
+    ss >> std::get_time(&tm, "%Y-%m-%d");
+    if (ss.fail()) {
+        return date; // fallback if parsing fails
+    }
+    tm.tm_mday -= 1;
+    // Normalize the tm structure.
+    mktime(&tm);
+    char buf[11];
+    strftime(buf, sizeof(buf), "%Y-%m-%d", &tm);
+    return std::string(buf);
+}
+
 
 void endActiveSessions() {
     sqlite3* dbHandle = getDatabase();
@@ -349,4 +365,128 @@ std::string formatTime(double totalSeconds) {
     char buffer[64];
     std::snprintf(buffer, sizeof(buffer), "%d:%02d:%02d", hours, minutes, seconds);
     return std::string(buffer);
+}
+
+void checkActiveSessionIntegrity() {
+    sqlite3* dbHandle = getDatabase();
+    if (!dbHandle) {
+        std::cerr << "Database not initialized.\n";
+        return;
+    }
+
+    // Query sessions with a NULL endTime ordered by startTime (earliest first).
+    const char* sql = "SELECT id FROM ActivitySession WHERE endTime IS NULL ORDER BY startTime ASC;";
+    sqlite3_stmt* stmt = nullptr;
+    int rc = sqlite3_prepare_v2(dbHandle, sql, -1, &stmt, nullptr);
+    if (rc != SQLITE_OK) {
+        std::cerr << "Failed to prepare active session query: "
+                  << sqlite3_errmsg(dbHandle) << std::endl;
+        return;
+    }
+
+    int count = 0;
+    int earliestSessionId = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        int id = sqlite3_column_int(stmt, 0);
+        count++;
+        if (count == 1) {
+            // The first row is the earliest session.
+            earliestSessionId = id;
+        }
+    }
+    sqlite3_finalize(stmt);
+
+    if (count > 1) {
+        std::cerr << "Error: More than one active session detected (endTime is NULL): "
+                  << count << std::endl;
+        // Update the earliest session with current time as the endTime.
+        const char* updateSql = "UPDATE ActivitySession SET endTime = julianday('now','localtime') WHERE id = ?;";
+        sqlite3_stmt* updateStmt = nullptr;
+        rc = sqlite3_prepare_v2(dbHandle, updateSql, -1, &updateStmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare update statement: "
+                      << sqlite3_errmsg(dbHandle) << std::endl;
+            return;
+        }
+        sqlite3_bind_int(updateStmt, 1, earliestSessionId);
+        rc = sqlite3_step(updateStmt);
+        if (rc != SQLITE_DONE) {
+            std::cerr << "Failed to update session with id " << earliestSessionId
+                      << ": " << sqlite3_errmsg(dbHandle) << std::endl;
+        } else {
+            std::cout << "Fixed error: Session with id " << earliestSessionId
+                      << " has been closed (endTime set to now)." << std::endl;
+        }
+        sqlite3_finalize(updateStmt);
+    }
+}
+
+
+// GUI nonsense
+void setDefaultTheme() {
+    // Colors
+    ImVec4 blackSemi = ImVec4(0.00f, 0.00f, 0.00f, 0.94f);
+    ImVec4 black = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+    ImVec4 red = ImVec4(0.23f, 0.16f, 0.16f, 1.00f);
+    ImVec4 beige = ImVec4(0.78f, 0.62f, 0.51f, 1.00f);
+    ImVec4 darkGrey = ImVec4(0.24f, 0.24f, 0.24f, 1.00f);
+    ImVec4 greenGrey = ImVec4(0.148f, 0.168f, 0.153f, 1.00f);
+    ImVec4 white = ImVec4(1.00f, 1.00f, 1.00f, 1.00f);
+    ImVec4 darkerGrey = ImVec4(0.03f, 0.03f, 0.03f, 1.00f);
+    ImVec4 grey = ImVec4(0.41f, 0.41f, 0.41f, 1.00f);
+    ImVec4 green = ImVec4(0.21f, 0.27f, 0.27f, 1.00f);
+
+    ImVec4* colors = ImGui::GetStyle().Colors;
+    colors[ImGuiCol_Text]                   = beige;
+    colors[ImGuiCol_TextDisabled]           = white;
+    colors[ImGuiCol_WindowBg]               = black;
+    colors[ImGuiCol_ChildBg]                = black;
+    colors[ImGuiCol_PopupBg]                = black;
+    colors[ImGuiCol_Border]                 = beige;
+    colors[ImGuiCol_BorderShadow]           = black;
+    colors[ImGuiCol_FrameBg]                = red;
+    colors[ImGuiCol_FrameBgHovered]         = darkerGrey;
+    colors[ImGuiCol_FrameBgActive]          = black;
+    colors[ImGuiCol_TitleBg]                = black;
+    colors[ImGuiCol_TitleBgActive]          = black;
+    colors[ImGuiCol_TitleBgCollapsed]       = black;
+    colors[ImGuiCol_MenuBarBg]              = red;
+    colors[ImGuiCol_ScrollbarBg]            = black;
+    colors[ImGuiCol_ScrollbarGrab]          = red;
+    colors[ImGuiCol_ScrollbarGrabHovered]   = darkerGrey;
+    colors[ImGuiCol_ScrollbarGrabActive]    = grey;
+    colors[ImGuiCol_CheckMark]              = beige;
+    colors[ImGuiCol_SliderGrab]             = beige;
+    colors[ImGuiCol_SliderGrabActive]       = beige;
+    colors[ImGuiCol_Button]                 = red;
+    colors[ImGuiCol_ButtonHovered]          = darkerGrey;
+    colors[ImGuiCol_ButtonActive]           = red;
+    colors[ImGuiCol_Header]                 = red;
+    colors[ImGuiCol_HeaderHovered]          = darkerGrey;
+    colors[ImGuiCol_HeaderActive]           = black;
+    colors[ImGuiCol_Separator]              = beige;
+    colors[ImGuiCol_SeparatorHovered]       = darkerGrey;
+    colors[ImGuiCol_SeparatorActive]        = beige;
+    colors[ImGuiCol_ResizeGrip]             = black;
+    colors[ImGuiCol_ResizeGripHovered]      = darkerGrey;
+    colors[ImGuiCol_ResizeGripActive]       = black;
+    colors[ImGuiCol_Tab]                    = red;
+    colors[ImGuiCol_TabHovered]             = darkerGrey;
+    colors[ImGuiCol_TabActive]              = darkerGrey;
+    colors[ImGuiCol_TabUnfocused]           = black;
+    colors[ImGuiCol_TabUnfocusedActive]     = black;
+    colors[ImGuiCol_PlotLines]              = beige;
+    colors[ImGuiCol_PlotLinesHovered]       = darkerGrey;
+    colors[ImGuiCol_PlotHistogram]          = beige;
+    colors[ImGuiCol_PlotHistogramHovered]   = darkerGrey;
+    colors[ImGuiCol_TextSelectedBg]         = black;
+    colors[ImGuiCol_DragDropTarget]         = beige;
+    colors[ImGuiCol_NavHighlight]           = black;
+    colors[ImGuiCol_NavWindowingHighlight]  = black;
+    colors[ImGuiCol_NavWindowingDimBg]      = black;
+    colors[ImGuiCol_ModalWindowDimBg]       = black;
+
+    // IO
+    ImGuiIO& io = ImGui::GetIO();
+    // io.FontGlobalScale = 1.6f;
 }
