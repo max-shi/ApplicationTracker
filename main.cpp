@@ -152,7 +152,7 @@ void DrawCalendar() {
 
         bool push = (day == calDay);
         if (push) {
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.7f, 0.0f, 1.0f)); // green highlight
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.41f, 0.41f, 0.41f, 1.00f)); // green highlight
         }
         if (ImGui::Button(buf, ImVec2(cellWidth, cellHeight))) {
             calDay = day;
