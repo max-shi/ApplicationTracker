@@ -72,7 +72,6 @@ void initializeCurrentDate() {
 
 
 
-
 void load_ImGui() {
     // --- Controls Pane ---
     ImGui::Begin("Controls");
@@ -108,6 +107,7 @@ void load_ImGui() {
         mode = 2;
     }
     ImGui::End();
+
 
 
 
@@ -182,15 +182,6 @@ void load_ImGui() {
     // --- Usage Pie Chart Pane ---
     ImGui::Begin("Usage Pie Chart");
 
-    // Reserve a square region for the pie chart.
-    ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
-    ImVec2 canvas_sz = ImVec2(300, 300); // Adjust as needed.
-    ImGui::InvisibleButton("canvas", canvas_sz);
-    ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
-    ImVec2 center = ImVec2((canvas_p0.x + canvas_p1.x) * 0.5f, (canvas_p0.y + canvas_p1.y) * 0.5f);
-    float radius = (canvas_sz.x < canvas_sz.y ? canvas_sz.x : canvas_sz.y) * 0.4f;
-
-    // Determine overall tracked time.
     double overallTime = 0.0;
     if (mode == 0) {
         overallTime = getTotalTimeTrackedCurrentRun("");
@@ -212,58 +203,78 @@ void load_ImGui() {
         float textWidth = ImGui::CalcTextSize("NO INFORMATION FOR THIS DATE").x;
         ImGui::SetCursorPosX((availWidth - textWidth) * 0.5f);
         ImGui::Text("NO INFORMATION FOR THIS DATE");
-    }
-    // Determine the process to highlight.
-    // Priority: use the hovered table process, if available.
-    std::string highlightProcess = hoveredTableProcess;
+    } else {
+        // Center the pie chart canvas horizontally.
+        ImVec2 avail = ImGui::GetContentRegionAvail();
+        ImVec2 canvas_sz = ImVec2(300, 300); // fixed size for the pie chart
+        float offsetX = (avail.x - canvas_sz.x) * 0.5f;
+        if (offsetX > 0)
+            ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
 
-    // Vector to capture each slice’s angle boundaries.
-    std::vector<std::pair<PieSlice, std::pair<float, float>>> sliceAngles;
-    DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
+        ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
+        ImGui::InvisibleButton("canvas", canvas_sz);
+        ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
+        ImVec2 center = ImVec2((canvas_p0.x + canvas_p1.x) * 0.5f, (canvas_p0.y + canvas_p1.y) * 0.5f);
+        float radius = (canvas_sz.x < canvas_sz.y ? canvas_sz.x : canvas_sz.y) * 0.4f;
 
-    // If no table row is hovered, use mouse hover over the pie chart to set the highlight.
-    if (highlightProcess.empty()) {
-        ImVec2 mousePos = ImGui::GetIO().MousePos;
-        float dx = mousePos.x - center.x;
-        float dy = mousePos.y - center.y;
-        float dist = sqrtf(dx * dx + dy * dy);
-        if (dist <= radius) {
-            float mouseAngle = atan2f(dy, dx);
-            if (mouseAngle < 0)
-                mouseAngle += 2 * IM_PI;
-            for (const auto &entry : sliceAngles) {
-                float startAngle = entry.second.first;
-                float endAngle = entry.second.second;
-                if (mouseAngle >= startAngle && mouseAngle < endAngle) {
-                    highlightProcess = entry.first.label;
-                    break;
+        // Determine the process to highlight.
+        std::string highlightProcess = hoveredTableProcess;
+
+        // Vector to capture each slice’s angle boundaries.
+        std::vector<std::pair<PieSlice, std::pair<float, float>>> sliceAngles;
+        DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
+
+        // If no table row is hovered, use mouse hover over the pie chart to set the highlight.
+        if (highlightProcess.empty()) {
+            ImVec2 mousePos = ImGui::GetIO().MousePos;
+            float dx = mousePos.x - center.x;
+            float dy = mousePos.y - center.y;
+            float dist = sqrtf(dx * dx + dy * dy);
+            if (dist <= radius) {
+                float mouseAngle = atan2f(dy, dx);
+                if (mouseAngle < 0)
+                    mouseAngle += 2 * IM_PI;
+                for (const auto &entry : sliceAngles) {
+                    float startAngle = entry.second.first;
+                    float endAngle = entry.second.second;
+                    if (mouseAngle >= startAngle && mouseAngle < endAngle) {
+                        highlightProcess = entry.first.label;
+                        break;
+                    }
                 }
             }
         }
-    }
 
-    // If a table process was hovered but not found among the drawn slices,
-    // it belongs to the aggregated "Other" group.
-    bool found = false;
-    for (const auto &entry : sliceAngles) {
-        if (entry.first.label == hoveredTableProcess) {
-            found = true;
-            break;
+        // If a table process was hovered but not found among the drawn slices,
+        // it belongs to the aggregated "Other" group.
+        bool found = false;
+        for (const auto &entry : sliceAngles) {
+            if (entry.first.label == hoveredTableProcess) {
+                found = true;
+                break;
+            }
         }
-    }
-    if (!hoveredTableProcess.empty() && !found) {
-        highlightProcess = "Other";
-    }
+        if (!hoveredTableProcess.empty() && !found) {
+            highlightProcess = "Other";
+        }
 
-    // Redraw the pie chart with the updated highlight.
-    DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
+        // Redraw the pie chart with the updated highlight.
+        DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
 
-    // Display label below the pie chart for the highlighted slice.
-    ImGui::Dummy(ImVec2(canvas_sz.x, 10)); // Spacer
-    for (const auto &entry : sliceAngles) {
-        if (entry.first.label == highlightProcess) {
-            ImGui::Text("Process: %s, Time: %s", entry.first.label.c_str(), formatTime(entry.first.value).c_str());
-            break;
+        // Spacer below the canvas.
+        ImGui::Dummy(ImVec2(canvas_sz.x, 10));
+        // Center the label text underneath the pie chart.
+        for (const auto &entry : sliceAngles) {
+            if (entry.first.label == highlightProcess) {
+                char labelBuffer[256];
+                snprintf(labelBuffer, sizeof(labelBuffer), "Process: %s, Time: %s",
+                         entry.first.label.c_str(), formatTime(entry.first.value).c_str());
+                float textWidth = ImGui::CalcTextSize(labelBuffer).x;
+                float availWidth = ImGui::GetContentRegionAvail().x;
+                ImGui::SetCursorPosX((availWidth - textWidth) * 0.5f);
+                ImGui::Text("%s", labelBuffer);
+                break;
+            }
         }
     }
     ImGui::End();
@@ -271,7 +282,6 @@ void load_ImGui() {
 
 
 }
-
 
 //-----------------------------------------------------------------------------
 // Main entry point of the application.
@@ -421,6 +431,3 @@ int main(int, char**)
     endActiveSessions();
     return 0; // Exit the application.
 }
-
-
-
