@@ -15,7 +15,11 @@
 
 static int mode = 0; // 0 = All-time, 1 = Daily average
 static char selectedDate[11];  // Default date in YYYY-MM-DD format
-
+// Define an idle threshold (e.g., 5 minutes = 300000 ms)
+const DWORD idleThreshold = 300000;
+// Global or static variable to keep track of the current session ID.
+static int currentSessionId = -1;
+static bool sessionActive = false;
 
 // Forward declaration of ImGui's Win32 message handler (defined in imgui_impl_win32.cpp).
 extern LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -254,7 +258,6 @@ int main(int, char**)
         }
         if (done)
             break;
-
         // Start a new frame for ImGui (prepare for UI rendering).
         ImGui_ImplOpenGL3_NewFrame(); // Start new frame for OpenGL3.
         ImGui_ImplWin32_NewFrame();   // Start new frame for Win32.
