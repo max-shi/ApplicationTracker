@@ -18,14 +18,14 @@ void DrawPieChart(const std::vector<ApplicationData>& topApps,
     // Compute "base" other time: sessions not in topApps.
     double baseOtherTime = overallTime - topAppsSum;
 
-    // Separate topApps into those above the threshold and those below.
+    // Separate topApps into slices above threshold and those below.
     const double thresholdPercent = 1.5;
     std::vector<PieSlice> bigSlices;
     double aggregatedSmall = 0.0;
 
     for (size_t i = 0; i < topApps.size(); i++) {
         double percent = (overallTime > 0) ? (topApps[i].totalTime / overallTime * 100.0) : 0.0;
-        // Choose a color (this is a simple formula; customize as needed).
+        // Choose a color (this simple formula can be customized).
         ImU32 color = IM_COL32(50 + (i * 20) % 205, 100 + (i * 30) % 155, 150 + (i * 40) % 105, 255);
         if (percent < thresholdPercent) {
             aggregatedSmall += topApps[i].totalTime;
@@ -34,7 +34,7 @@ void DrawPieChart(const std::vector<ApplicationData>& topApps,
         }
     }
 
-    // Combine aggregated small slices with base "other" time.
+    // Combine aggregated small slices with the base "other" time.
     double finalOther = aggregatedSmall + baseOtherTime;
 
     std::vector<PieSlice> slicesToDraw = bigSlices;
@@ -51,8 +51,10 @@ void DrawPieChart(const std::vector<ApplicationData>& topApps,
         float sliceAngle = 2 * IM_PI * (slice.value / overallTime);
         float endAngle = startAngle + sliceAngle;
 
-        // If this slice is to be highlighted, darken its color.
+        // Start with the slice's base color.
         ImU32 drawColor = slice.color;
+
+        // If this slice is to be highlighted, darken its color.
         if (!highlightProcess.empty() && slice.label == highlightProcess) {
             int r = drawColor & 0xFF;
             int g = (drawColor >> 8) & 0xFF;
@@ -64,7 +66,7 @@ void DrawPieChart(const std::vector<ApplicationData>& topApps,
             drawColor = IM_COL32(r, g, b, a);
         }
 
-        // Compute points along the arc.
+        // Build the arc points.
         ImVector<ImVec2> points;
         points.push_back(center);
         for (int i = 0; i <= numSegments; i++) {
@@ -75,11 +77,11 @@ void DrawPieChart(const std::vector<ApplicationData>& topApps,
 
         // Draw the filled slice.
         draw_list->AddConvexPolyFilled(points.Data, points.Size, drawColor);
-        // Optionally draw an outline (thicker if highlighted).
+        // Draw an outline (thicker if highlighted).
         float thickness = (!highlightProcess.empty() && slice.label == highlightProcess) ? 2.0f : 1.0f;
         draw_list->AddPolyline(points.Data, points.Size, IM_COL32(0, 0, 0, 255), true, thickness);
 
-        // Record the slice boundaries for later hover detection.
+        // Record the slice boundaries (startAngle, endAngle) for hover detection.
         outSliceAngles.push_back({ slice, { startAngle, endAngle } });
 
         startAngle = endAngle;

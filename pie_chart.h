@@ -20,7 +20,7 @@ struct PieSlice {
 /// @param overallTime Total tracked time (in seconds).
 /// @param center Center of the pie chart in screen coordinates.
 /// @param radius Radius of the pie chart.
-/// @param highlightProcess Process name to highlight (if any).
+/// @param highlightProcess Process name to highlight (if any). If the hovered process is part of the aggregated group, pass "Other".
 /// @param outSliceAngles On return, each element contains a PieSlice and a pair (startAngle, endAngle).
 void DrawPieChart(const std::vector<ApplicationData>& topApps,
                   double overallTime,

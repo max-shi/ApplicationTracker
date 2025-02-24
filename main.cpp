@@ -164,73 +164,93 @@ void load_ImGui() {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("%s", app.processName.c_str());
-            // If this cell is hovered, record the process name.
-            if (ImGui::IsItemHovered()) {
+            if (ImGui::IsItemHovered())
                 hoveredTableProcess = app.processName;
-            }
             ImGui::TableSetColumnIndex(1);
             ImGui::Text("%s", formatTime(app.totalTime).c_str());
         }
         ImGui::EndTable();
     }
     ImGui::End();
+
     // --- Usage Pie Chart Pane ---
-ImGui::Begin("Usage Pie Chart");
-ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
-ImVec2 canvas_sz = ImVec2(300, 300); // Adjust as needed.
-ImGui::InvisibleButton("canvas", canvas_sz);
-ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
-ImVec2 center = ImVec2((canvas_p0.x + canvas_p1.x) * 0.5f, (canvas_p0.y + canvas_p1.y) * 0.5f);
-float radius = (canvas_sz.x < canvas_sz.y ? canvas_sz.x : canvas_sz.y) * 0.4f;
+    ImGui::Begin("Usage Pie Chart");
 
-// Determine overall time.
-double overallTime = 0.0;
-if (mode == 0) {
-    overallTime = getTotalTimeTrackedCurrentRun("");
-} else if (mode == 1) {
-    std::string startDate(selectedDate);
-    std::string endDate = getNextDate(startDate);
-    overallTime = getTotalTimeTrackedCurrentRun(startDate, endDate);
-} else if (mode == 2) {
-    double daysTracked = getDaysTracked();
-    overallTime = (daysTracked > 0) ? (getTotalTimeTrackedCurrentRun("") / daysTracked) : 0.0;
-}
+    // Reserve a square region for the pie chart.
+    ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
+    ImVec2 canvas_sz = ImVec2(300, 300); // Adjust as needed.
+    ImGui::InvisibleButton("canvas", canvas_sz);
+    ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
+    ImVec2 center = ImVec2((canvas_p0.x + canvas_p1.x) * 0.5f, (canvas_p0.y + canvas_p1.y) * 0.5f);
+    float radius = (canvas_sz.x < canvas_sz.y ? canvas_sz.x : canvas_sz.y) * 0.4f;
 
-// Determine the process to highlight.
-// Priority: if a table row is hovered, use that. Otherwise, detect hover over the pie chart.
-std::string highlightProcess = hoveredTableProcess;
-std::vector<std::pair<PieSlice, std::pair<float, float>>> sliceAngles;
-DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
+    // Determine overall tracked time.
+    double overallTime = 0.0;
+    if (mode == 0) {
+        overallTime = getTotalTimeTrackedCurrentRun("");
+    } else if (mode == 1) {
+        std::string startDate(selectedDate);
+        std::string endDate = getNextDate(startDate);
+        overallTime = getTotalTimeTrackedCurrentRun(startDate, endDate);
+    } else if (mode == 2) {
+        double daysTracked = getDaysTracked();
+        overallTime = (daysTracked > 0) ? (getTotalTimeTrackedCurrentRun("") / daysTracked) : 0.0;
+    }
 
-if (highlightProcess.empty()) {
-    ImVec2 mousePos = ImGui::GetIO().MousePos;
-    float dx = mousePos.x - center.x;
-    float dy = mousePos.y - center.y;
-    float dist = sqrtf(dx * dx + dy * dy);
-    if (dist <= radius) {
-        float mouseAngle = atan2f(dy, dx);
-        if (mouseAngle < 0)
-            mouseAngle += 2 * IM_PI;
-        for (const auto &entry : sliceAngles) {
-            float startAngle = entry.second.first;
-            float endAngle = entry.second.second;
-            if (mouseAngle >= startAngle && mouseAngle < endAngle) {
-                highlightProcess = entry.first.label;
-                break;
+    // Determine the process to highlight.
+    // Priority: use the hovered table process, if available.
+    std::string highlightProcess = hoveredTableProcess;
+
+    // Vector to capture each slice’s angle boundaries.
+    std::vector<std::pair<PieSlice, std::pair<float, float>>> sliceAngles;
+    DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
+
+    // If no table row is hovered, use mouse hover over the pie chart to set the highlight.
+    if (highlightProcess.empty()) {
+        ImVec2 mousePos = ImGui::GetIO().MousePos;
+        float dx = mousePos.x - center.x;
+        float dy = mousePos.y - center.y;
+        float dist = sqrtf(dx * dx + dy * dy);
+        if (dist <= radius) {
+            float mouseAngle = atan2f(dy, dx);
+            if (mouseAngle < 0)
+                mouseAngle += 2 * IM_PI;
+            for (const auto &entry : sliceAngles) {
+                float startAngle = entry.second.first;
+                float endAngle = entry.second.second;
+                if (mouseAngle >= startAngle && mouseAngle < endAngle) {
+                    highlightProcess = entry.first.label;
+                    break;
+                }
             }
         }
     }
-}
 
-// Display a label below the pie chart if a slice is highlighted.
-ImGui::Dummy(ImVec2(canvas_sz.x, 10)); // Spacer
-for (const auto &entry : sliceAngles) {
-    if (entry.first.label == highlightProcess) {
-        ImGui::Text("Process: %s, Time: %s", entry.first.label.c_str(), formatTime(entry.first.value).c_str());
-        break;
+    // If a table process was hovered but not found among the drawn slices,
+    // it belongs to the aggregated "Other" group.
+    bool found = false;
+    for (const auto &entry : sliceAngles) {
+        if (entry.first.label == hoveredTableProcess) {
+            found = true;
+            break;
+        }
     }
-}
-ImGui::End();
+    if (!hoveredTableProcess.empty() && !found) {
+        highlightProcess = "Other";
+    }
+
+    // Redraw the pie chart with the updated highlight.
+    DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
+
+    // Display label below the pie chart for the highlighted slice.
+    ImGui::Dummy(ImVec2(canvas_sz.x, 10)); // Spacer
+    for (const auto &entry : sliceAngles) {
+        if (entry.first.label == highlightProcess) {
+            ImGui::Text("Process: %s, Time: %s", entry.first.label.c_str(), formatTime(entry.first.value).c_str());
+            break;
+        }
+    }
+    ImGui::End();
 
 
 
