@@ -15,6 +15,9 @@
 #include "pie_chart.h"
 #include "functions.h"
 
+#include <cstdio>   // for snprintf, sscanf
+#include <ctime>    // for std::tm, mktime
+
 static int mode = 0; // 0 = All-time, 1 = Daily average
 static char selectedDate[11];  // Default date in YYYY-MM-DD format
 // Define an idle threshold (e.g., 5 minutes = 300000 ms)
@@ -39,38 +42,144 @@ static LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
     case WM_SIZE:
-        // When the window is resized, update the OpenGL viewport if not minimized.
         if (wParam != SIZE_MINIMIZED)
         {
-            int width = LOWORD(lParam);  // Get the new width.
-            int height = HIWORD(lParam);  // Get the new height.
-            glViewport(0, 0, width, height); // Set the OpenGL viewport to cover the new window size.
+            int width = LOWORD(lParam);
+            int height = HIWORD(lParam);
+            glViewport(0, 0, width, height);
         }
         return 0;
     case WM_SYSCOMMAND:
-        // Disable the ALT application menu.
         if ((wParam & 0xfff0) == SC_KEYMENU)
             return 0;
         break;
     case WM_DESTROY:
-        // When the window is destroyed, post a quit message to exit the application.
         PostQuitMessage(0);
         return 0;
     }
-    // For all other messages, use the default window procedure.
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
+
 void initializeCurrentDate() {
     std::time_t t = std::time(nullptr);
     std::tm tm;
-    // For MSVC use localtime_s, for POSIX use localtime_r or simply localtime.
     localtime_s(&tm, &t);
     std::strftime(selectedDate, sizeof(selectedDate), "%Y-%m-%d", &tm);
 }
 
+// --- Calendar View Implementation ---
+// Helper: Get the number of days in a given month.
+int GetDaysInMonth(int year, int month) {
+    if (month == 2) {
+        bool leap = (year % 4 == 0 && (year % 100 != 0 || year % 400 == 0));
+        return leap ? 29 : 28;
+    }
+    if (month == 4 || month == 6 || month == 9 || month == 11)
+        return 30;
+    return 31;
+}
 
+// Draws a simple calendar view. When a day is clicked the global selectedDate is updated.
+void DrawCalendar() {
+    // Static calendar state; initialize from selectedDate on first run.
+    static int calYear = 0, calMonth = 0, calDay = 0;
+    if (calYear == 0) {
+        sscanf(selectedDate, "%d-%d-%d", &calYear, &calMonth, &calDay);
+    }
 
+    // Month navigation buttons.
+    if (ImGui::Button("<")) {
+        mode = 1;
+        calMonth--;
+        if (calMonth < 1) {
+            calMonth = 12;
+            calYear--;
+        }
+        calDay = 0; // Reset day selection
+    }
+    ImGui::SameLine();
+    {
+        char header[32];
+        snprintf(header, sizeof(header), "%04d-%02d", calYear, calMonth);
+        ImGui::Text("%s", header);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button(">")) {
+        mode = 1;
+        calMonth++;
+        if (calMonth > 12) {
+            calMonth = 1;
+            calYear++;
+        }
+        calDay = 0;
+    }
 
+    ImGui::Spacing();
+
+    // Display days-of-week header.
+    const char* daysOfWeek[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+    for (int i = 0; i < 7; i++) {
+        ImGui::SameLine(i * 50.0f); // Adjust spacing as needed.
+        ImGui::Text("%s", daysOfWeek[i]);
+    }
+    ImGui::NewLine();
+    ImGui::Separator();
+
+    // Determine first weekday of the month.
+    std::tm time_in = {};
+    time_in.tm_year = calYear - 1900;
+    time_in.tm_mon = calMonth - 1;
+    time_in.tm_mday = 1;
+    mktime(&time_in);
+    int firstWeekday = time_in.tm_wday; // Sunday = 0, Monday = 1, etc.
+
+    int daysInMonth = GetDaysInMonth(calYear, calMonth);
+    int cellWidth = 40;
+    int cellHeight = 40;
+    int col = 0;
+
+    // Leave empty cells until the first day.
+    for (int i = 0; i < firstWeekday; i++) {
+        ImGui::SameLine();
+        ImGui::Dummy(ImVec2(cellWidth, cellHeight));
+        col++;
+    }
+
+    // Render each day as a button.
+    for (int day = 1; day <= daysInMonth; day++) {
+        char buf[4];
+        snprintf(buf, sizeof(buf), "%d", day);
+
+        bool push = (day == calDay);
+        if (push) {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.7f, 0.0f, 1.0f)); // green highlight
+        }
+        if (ImGui::Button(buf, ImVec2(cellWidth, cellHeight))) {
+            calDay = day;
+            mode = 1;
+            // Update the global selectedDate in YYYY-MM-DD format.
+            snprintf(selectedDate, sizeof(selectedDate), "%04d-%02d-%02d", calYear, calMonth, calDay);
+        }
+        if (push) {
+            ImGui::PopStyleColor();
+        }
+
+        col++;
+        if (col % 7 != 0)
+            ImGui::SameLine();
+        else
+            ImGui::NewLine();
+    }
+
+    ImGui::Spacing();
+    if (calDay != 0) {
+        char selectedBuf[32];
+        snprintf(selectedBuf, sizeof(selectedBuf), "Selected Date: %04d-%02d-%02d", calYear, calMonth, calDay);
+        ImGui::Text("%s", selectedBuf);
+    }
+}
+
+// --- End Calendar View Implementation ---
 
 void load_ImGui() {
     // --- Controls Pane ---
@@ -78,40 +187,27 @@ void load_ImGui() {
 
     // Date input field.
     ImGui::InputText("Date (YYYY-MM-DD)", selectedDate, sizeof(selectedDate));
-    //ImGui::SameLine();
-    // Button to go to the previous day.
-
     // Mode selection buttons.
-    if (ImGui::Button("All-Time")) {
-        mode = 0;
-    }
+    if (ImGui::Button("All-Time")) { mode = 0; }
     ImGui::SameLine();
-    if (ImGui::Button("Day Total")) {
-        mode = 1;
-    }
+    if (ImGui::Button("Day Total")) { mode = 1; }
     ImGui::SameLine();
     if (ImGui::Button("<")) {
         std::string newDate = getPreviousDate(std::string(selectedDate));
         strncpy(selectedDate, newDate.c_str(), sizeof(selectedDate));
-        selectedDate[sizeof(selectedDate) - 1] = '\0';
+        selectedDate[sizeof(selectedDate)-1] = '\0';
+        mode = 1;
     }
     ImGui::SameLine();
-    // Button to go to the next day.
     if (ImGui::Button(">")) {
         std::string newDate = getNextDate(std::string(selectedDate));
         strncpy(selectedDate, newDate.c_str(), sizeof(selectedDate));
-        selectedDate[sizeof(selectedDate) - 1] = '\0';
+        selectedDate[sizeof(selectedDate)-1] = '\0';
+        mode = 1;
     }
     ImGui::SameLine();
-    if (ImGui::Button("Daily Average")) {
-        mode = 2;
-    }
+    if (ImGui::Button("Daily Average")) { mode = 2; }
     ImGui::End();
-
-
-
-
-
 
     // --- Total Time Tracked Pane ---
     ImGui::Begin("Total Time Tracked");
@@ -126,10 +222,7 @@ void load_ImGui() {
         ImGui::Text("Time Tracked on %s: %s", selectedDate, formatTime(totalSeconds).c_str());
     } else if (mode == 2) {
         double daysTracked = getDaysTracked();
-        if (daysTracked > 0)
-            totalSeconds = getTotalTimeTrackedCurrentRun("") / daysTracked;
-        else
-            totalSeconds = 0.0;
+        totalSeconds = (daysTracked > 0) ? (getTotalTimeTrackedCurrentRun("") / daysTracked) : 0.0;
         ImGui::Text("Daily Average: %s", formatTime(totalSeconds).c_str());
     }
     ImGui::End();
@@ -152,7 +245,6 @@ void load_ImGui() {
         }
     }
     if (topApps.empty()) {
-        // Center the "NO INFORMATION FOR THIS DATE" message.
         float availWidth = ImGui::GetContentRegionAvail().x;
         float textWidth = ImGui::CalcTextSize("NO INFORMATION FOR THIS DATE").x;
         ImGui::SetCursorPosX((availWidth - textWidth) * 0.5f);
@@ -165,7 +257,6 @@ void load_ImGui() {
         else
             ImGui::TableSetupColumn("Process"), ImGui::TableSetupColumn("Total Time");
         ImGui::TableHeadersRow();
-
         for (const auto &app : topApps) {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
@@ -181,7 +272,6 @@ void load_ImGui() {
 
     // --- Usage Pie Chart Pane ---
     ImGui::Begin("Usage Pie Chart");
-
     double overallTime = 0.0;
     if (mode == 0) {
         overallTime = getTotalTimeTrackedCurrentRun("");
@@ -191,40 +281,27 @@ void load_ImGui() {
         overallTime = getTotalTimeTrackedCurrentRun(startDate, endDate);
     } else if (mode == 2) {
         double daysTracked = getDaysTracked();
-        if (daysTracked > 1) {
-            overallTime = getTotalTimeTrackedCurrentRun("") / daysTracked;
-        } else {
-            overallTime = getTotalTimeTrackedCurrentRun("");
-        }
+        overallTime = (daysTracked > 1) ? (getTotalTimeTrackedCurrentRun("") / daysTracked) : getTotalTimeTrackedCurrentRun("");
     }
     if (overallTime <= 0.0) {
-        // Center the "NO INFORMATION FOR THIS DATE" message.
         float availWidth = ImGui::GetContentRegionAvail().x;
         float textWidth = ImGui::CalcTextSize("NO INFORMATION FOR THIS DATE").x;
         ImGui::SetCursorPosX((availWidth - textWidth) * 0.5f);
         ImGui::Text("NO INFORMATION FOR THIS DATE");
     } else {
-        // Center the pie chart canvas horizontally.
         ImVec2 avail = ImGui::GetContentRegionAvail();
-        ImVec2 canvas_sz = ImVec2(300, 300); // fixed size for the pie chart
+        ImVec2 canvas_sz = ImVec2(300, 300);
         float offsetX = (avail.x - canvas_sz.x) * 0.5f;
         if (offsetX > 0)
             ImGui::SetCursorPosX(ImGui::GetCursorPosX() + offsetX);
-
         ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
         ImGui::InvisibleButton("canvas", canvas_sz);
         ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
         ImVec2 center = ImVec2((canvas_p0.x + canvas_p1.x) * 0.5f, (canvas_p0.y + canvas_p1.y) * 0.5f);
         float radius = (canvas_sz.x < canvas_sz.y ? canvas_sz.x : canvas_sz.y) * 0.4f;
-
-        // Determine the process to highlight.
         std::string highlightProcess = hoveredTableProcess;
-
-        // Vector to capture each slice’s angle boundaries.
         std::vector<std::pair<PieSlice, std::pair<float, float>>> sliceAngles;
         DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
-
-        // If no table row is hovered, use mouse hover over the pie chart to set the highlight.
         if (highlightProcess.empty()) {
             ImVec2 mousePos = ImGui::GetIO().MousePos;
             float dx = mousePos.x - center.x;
@@ -244,9 +321,6 @@ void load_ImGui() {
                 }
             }
         }
-
-        // If a table process was hovered but not found among the drawn slices,
-        // it belongs to the aggregated "Other" group.
         bool found = false;
         for (const auto &entry : sliceAngles) {
             if (entry.first.label == hoveredTableProcess) {
@@ -257,13 +331,8 @@ void load_ImGui() {
         if (!hoveredTableProcess.empty() && !found) {
             highlightProcess = "Other";
         }
-
-        // Redraw the pie chart with the updated highlight.
         DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
-
-        // Spacer below the canvas.
         ImGui::Dummy(ImVec2(canvas_sz.x, 10));
-        // Center the label text underneath the pie chart.
         for (const auto &entry : sliceAngles) {
             if (entry.first.label == highlightProcess) {
                 char labelBuffer[256];
@@ -279,8 +348,10 @@ void load_ImGui() {
     }
     ImGui::End();
 
-
-
+    // --- Calendar Pane ---
+    ImGui::Begin("Calendar");
+    DrawCalendar();
+    ImGui::End();
 }
 
 //-----------------------------------------------------------------------------
@@ -291,143 +362,105 @@ int main(int, char**)
     if (!initDatabase("activity_log.db")) {
         return 1;
     }
-    // --- Create application window ---
-    // Define and initialize a window class structure.
     WNDCLASSEX wc = {
-        sizeof(WNDCLASSEX),            // Size of the structure.
-        CS_CLASSDC,                    // Class style.
-        WndProc,                       // Pointer to the window procedure.
-        0L, 0L,                        // Extra memory for class and window.
-        GetModuleHandle(NULL),         // Handle to the application instance.
-        NULL,                          // No icon.
-        NULL,                          // No cursor.
-        NULL,                          // No background brush.
-        NULL,                          // No menu.
-        _T("ImGui Example"),           // Window class name.
-        NULL                           // No small icon.
+        sizeof(WNDCLASSEX),
+        CS_CLASSDC,
+        WndProc,
+        0L, 0L,
+        GetModuleHandle(NULL),
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        _T("ImGui Example"),
+        NULL
     };
-    // Register the window class with Windows.
     ::RegisterClassEx(&wc);
-    // Create the window using the registered class.
     HWND hwnd = ::CreateWindow(
-        wc.lpszClassName,              // The class name to use.
-        _T("Application Tracker"), // Window title.
-        WS_OVERLAPPEDWINDOW,           // Window style.
-        100, 100,                      // Initial x and y position.
-        1280, 800,                     // Width and height of the window.
-        NULL,                          // No parent window.
-        NULL,                          // No menu.
-        wc.hInstance,                  // Application instance handle.
-        NULL                           // No additional parameters.
+        wc.lpszClassName,
+        _T("Application Tracker"),
+        WS_OVERLAPPEDWINDOW,
+        100, 100,
+        1280, 800,
+        NULL,
+        NULL,
+        wc.hInstance,
+        NULL
     );
-
-    // --- Initialize OpenGL context ---
-    // Retrieve the device context (DC) for the window.
     HDC hdc = ::GetDC(hwnd);
-    // Define the pixel format descriptor (PFD) for our OpenGL context.
     PIXELFORMATDESCRIPTOR pfd = {
-        sizeof(PIXELFORMATDESCRIPTOR),   // Size of this descriptor.
-        1,                               // Version number.
-        PFD_DRAW_TO_WINDOW |             // The format must support drawing to a window.
-        PFD_SUPPORT_OPENGL |             // The format must support OpenGL.
-        PFD_DOUBLEBUFFER,                // The format must support double buffering.
-        PFD_TYPE_RGBA,                   // Request an RGBA format.
-        32,                              // 32-bit color depth.
-        0, 0, 0, 0, 0, 0,                // Color bits (ignored here).
-        0,                               // No alpha buffer.
-        0,                               // Alpha shift (ignored).
-        0,                               // No accumulation buffer.
-        0, 0, 0, 0,                      // Accumulation bits (ignored).
-        24,                              // 24-bit depth buffer (Z-buffer).
-        8,                               // 8-bit stencil buffer.
-        0,                               // No auxiliary buffer.
-        PFD_MAIN_PLANE,                  // Main drawing layer.
-        0,                               // Reserved.
-        0, 0, 0                          // Layer masks (ignored).
+        sizeof(PIXELFORMATDESCRIPTOR),
+        1,
+        PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER,
+        PFD_TYPE_RGBA,
+        32,
+        0, 0, 0, 0, 0, 0,
+        0,
+        0,
+        0,
+        0, 0, 0, 0,
+        24,
+        8,
+        0,
+        PFD_MAIN_PLANE,
+        0,
+        0, 0, 0
     };
-    // Choose a pixel format that matches the given descriptor.
     int pf = ChoosePixelFormat(hdc, &pfd);
-    // Set the chosen pixel format for the device context.
     SetPixelFormat(hdc, pf, &pfd);
-    // Create an OpenGL rendering context.
     HGLRC hrc = wglCreateContext(hdc);
-    // Make the created OpenGL context current.
     wglMakeCurrent(hdc, hrc);
-    // Initialize OpenGL functions using gl3w.
     gl3wInit();
 
-    // Show the window on the screen.
     ::ShowWindow(hwnd, SW_SHOWDEFAULT);
-    // Update the window to ensure it is painted.
     ::UpdateWindow(hwnd);
 
-    // --- Setup Dear ImGui context ---
-    IMGUI_CHECKVERSION();           // Ensure the ImGui version is correct.
-    ImGui::CreateContext();         // Create a new ImGui context.
-    ImGuiIO& io = ImGui::GetIO();   // Get a reference to the IO structure (used for configuration).
-    (void)io;                      // Avoid unused variable warning.
-    ImGui::StyleColorsDark();       // Set the ImGui style to a dark theme.
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    (void)io;
+    ImGui::StyleColorsDark();
 
-    // Initialize the ImGui platform/renderer bindings for Win32 and OpenGL3.
-    ImGui_ImplWin32_Init(hwnd);     // Initialize the Win32 backend with our window.
-    ImGui_ImplOpenGL3_Init("#version 130");  // Initialize the OpenGL3 backend with the GLSL version string.
+    ImGui_ImplWin32_Init(hwnd);
+    ImGui_ImplOpenGL3_Init("#version 130");
     initializeCurrentDate();
-    // --- Main loop ---
-    bool done = false;  // Main loop flag.
-    MSG msg;            // Structure for Windows messages.
+    bool done = false;
+    MSG msg;
     setDefaultTheme();
-    // start timestamp for the overall session
     std::string programStartTime = getCurrentJulianDay();
     printf(programStartTime.c_str());
     while (!done)
     {
-        // Process all pending Windows messages.
         trackActiveWindowSession();
         while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
         {
-            ::TranslateMessage(&msg);  // Translate virtual-key messages.
-            ::DispatchMessage(&msg);   // Dispatch the message to our window procedure.
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
             if (msg.message == WM_QUIT)
-                done = true;           // Exit loop if a quit message is received.
+                done = true;
         }
         if (done)
             break;
-        // Start a new frame for ImGui (prepare for UI rendering).
-        ImGui_ImplOpenGL3_NewFrame(); // Start new frame for OpenGL3.
-        ImGui_ImplWin32_NewFrame();   // Start new frame for Win32.
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplWin32_NewFrame();
         ImGui::NewFrame();
         load_ImGui();
-        // error checking
         checkActiveSessionIntegrity();
-        // --- Rendering ---
-        // Finalize the ImGui frame and prepare the draw data.
         ImGui::Render();
-        // Set the OpenGL viewport to cover the entire display.
         glViewport(0, 0, (int)io.DisplaySize.x, (int)io.DisplaySize.y);
-        // Set a background color.
         glClearColor(0.45f, 0.55f, 0.60f, 1.00f);
-        // Clear the color buffer.
         glClear(GL_COLOR_BUFFER_BIT);
-        // Render the ImGui draw data using the OpenGL3 backend.
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        // Swap the front and back buffers to display the rendered frame.
         SwapBuffers(hdc);
     }
-
-    // --- Cleanup ---
-    // Shutdown and cleanup the ImGui OpenGL3 backend.
     ImGui_ImplOpenGL3_Shutdown();
-    // Shutdown and cleanup the ImGui Win32 backend.
     ImGui_ImplWin32_Shutdown();
-    // Destroy the ImGui context.
     ImGui::DestroyContext();
-
-    // Release and clean up the OpenGL context and device context.
     wglMakeCurrent(NULL, NULL);
     wglDeleteContext(hrc);
     ::ReleaseDC(hwnd, hdc);
     ::DestroyWindow(hwnd);
     ::UnregisterClass(wc.lpszClassName, wc.hInstance);
     endActiveSessions();
-    return 0; // Exit the application.
+    return 0;
 }
