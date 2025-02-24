@@ -2,6 +2,7 @@
 // including backends and gl3w (API functions et c)
 #include <chrono>
 #include <database.h>
+#include <imgui_internal.h>
 
 #include "imgui.h"
 #include "imgui_impl_win32.h"
@@ -11,6 +12,7 @@
 #include <tchar.h>
 #include <thread>
 #include <tracker.h>
+#include "pie_chart.h"
 #include "functions.h"
 
 static int mode = 0; // 0 = All-time, 1 = Daily average
@@ -66,6 +68,11 @@ void initializeCurrentDate() {
     std::strftime(selectedDate, sizeof(selectedDate), "%Y-%m-%d", &tm);
 }
 
+
+
+
+
+
 void load_ImGui() {
     // --- Controls Pane ---
     ImGui::Begin("Controls");
@@ -102,6 +109,10 @@ void load_ImGui() {
     }
     ImGui::End();
 
+
+
+
+
     // --- Total Time Tracked Pane ---
     ImGui::Begin("Total Time Tracked");
     double totalSeconds = 0.0;
@@ -123,7 +134,7 @@ void load_ImGui() {
     }
     ImGui::End();
 
-    // --- Top 10 Applications Pane ---
+    // --- Top 10 Applications Pane (Table) ---
     ImGui::Begin("Top 10 Applications");
     std::vector<ApplicationData> topApps;
     if (mode == 0) {
@@ -133,7 +144,6 @@ void load_ImGui() {
         std::string endDate = getNextDate(startDate);
         topApps = getTopApplications(startDate, endDate);
     } else if (mode == 2) {
-        // Get all-time totals then compute daily average per app.
         topApps = getTopApplications("");
         double daysTracked = getDaysTracked();
         for (auto &app : topApps) {
@@ -142,6 +152,7 @@ void load_ImGui() {
         }
     }
 
+    std::string hoveredTableProcess = "";
     if (ImGui::BeginTable("AppsTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
         if (mode == 2)
             ImGui::TableSetupColumn("Process"), ImGui::TableSetupColumn("Daily Average");
@@ -153,13 +164,76 @@ void load_ImGui() {
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::Text("%s", app.processName.c_str());
+            // If this cell is hovered, record the process name.
+            if (ImGui::IsItemHovered()) {
+                hoveredTableProcess = app.processName;
+            }
             ImGui::TableSetColumnIndex(1);
-            // Format the total time into HH:MM:SS.
             ImGui::Text("%s", formatTime(app.totalTime).c_str());
         }
         ImGui::EndTable();
     }
     ImGui::End();
+    // --- Usage Pie Chart Pane ---
+ImGui::Begin("Usage Pie Chart");
+ImVec2 canvas_p0 = ImGui::GetCursorScreenPos();
+ImVec2 canvas_sz = ImVec2(300, 300); // Adjust as needed.
+ImGui::InvisibleButton("canvas", canvas_sz);
+ImVec2 canvas_p1 = ImVec2(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
+ImVec2 center = ImVec2((canvas_p0.x + canvas_p1.x) * 0.5f, (canvas_p0.y + canvas_p1.y) * 0.5f);
+float radius = (canvas_sz.x < canvas_sz.y ? canvas_sz.x : canvas_sz.y) * 0.4f;
+
+// Determine overall time.
+double overallTime = 0.0;
+if (mode == 0) {
+    overallTime = getTotalTimeTrackedCurrentRun("");
+} else if (mode == 1) {
+    std::string startDate(selectedDate);
+    std::string endDate = getNextDate(startDate);
+    overallTime = getTotalTimeTrackedCurrentRun(startDate, endDate);
+} else if (mode == 2) {
+    double daysTracked = getDaysTracked();
+    overallTime = (daysTracked > 0) ? (getTotalTimeTrackedCurrentRun("") / daysTracked) : 0.0;
+}
+
+// Determine the process to highlight.
+// Priority: if a table row is hovered, use that. Otherwise, detect hover over the pie chart.
+std::string highlightProcess = hoveredTableProcess;
+std::vector<std::pair<PieSlice, std::pair<float, float>>> sliceAngles;
+DrawPieChart(topApps, overallTime, center, radius, highlightProcess, sliceAngles);
+
+if (highlightProcess.empty()) {
+    ImVec2 mousePos = ImGui::GetIO().MousePos;
+    float dx = mousePos.x - center.x;
+    float dy = mousePos.y - center.y;
+    float dist = sqrtf(dx * dx + dy * dy);
+    if (dist <= radius) {
+        float mouseAngle = atan2f(dy, dx);
+        if (mouseAngle < 0)
+            mouseAngle += 2 * IM_PI;
+        for (const auto &entry : sliceAngles) {
+            float startAngle = entry.second.first;
+            float endAngle = entry.second.second;
+            if (mouseAngle >= startAngle && mouseAngle < endAngle) {
+                highlightProcess = entry.first.label;
+                break;
+            }
+        }
+    }
+}
+
+// Display a label below the pie chart if a slice is highlighted.
+ImGui::Dummy(ImVec2(canvas_sz.x, 10)); // Spacer
+for (const auto &entry : sliceAngles) {
+    if (entry.first.label == highlightProcess) {
+        ImGui::Text("Process: %s, Time: %s", entry.first.label.c_str(), formatTime(entry.first.value).c_str());
+        break;
+    }
+}
+ImGui::End();
+
+
+
 }
 
 
