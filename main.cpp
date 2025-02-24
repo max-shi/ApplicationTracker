@@ -194,7 +194,11 @@ void load_ImGui() {
         overallTime = getTotalTimeTrackedCurrentRun(startDate, endDate);
     } else if (mode == 2) {
         double daysTracked = getDaysTracked();
-        overallTime = (daysTracked > 0) ? (getTotalTimeTrackedCurrentRun("") / daysTracked) : 0.0;
+        if (daysTracked > 1) {
+            overallTime = getTotalTimeTrackedCurrentRun("") / daysTracked;
+        } else {
+            overallTime = getTotalTimeTrackedCurrentRun("");
+        }
     }
 
     // Determine the process to highlight.
