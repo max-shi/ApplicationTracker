@@ -151,7 +151,13 @@ void load_ImGui() {
                 app.totalTime = app.totalTime / daysTracked;
         }
     }
-
+    if (topApps.empty()) {
+        // Center the "NO INFORMATION FOR THIS DATE" message.
+        float availWidth = ImGui::GetContentRegionAvail().x;
+        float textWidth = ImGui::CalcTextSize("NO INFORMATION FOR THIS DATE").x;
+        ImGui::SetCursorPosX((availWidth - textWidth) * 0.5f);
+        ImGui::Text("NO INFORMATION FOR THIS DATE");
+    }
     std::string hoveredTableProcess = "";
     if (ImGui::BeginTable("AppsTable", 2, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
         if (mode == 2)
@@ -200,7 +206,13 @@ void load_ImGui() {
             overallTime = getTotalTimeTrackedCurrentRun("");
         }
     }
-
+    if (overallTime <= 0.0) {
+        // Center the "NO INFORMATION FOR THIS DATE" message.
+        float availWidth = ImGui::GetContentRegionAvail().x;
+        float textWidth = ImGui::CalcTextSize("NO INFORMATION FOR THIS DATE").x;
+        ImGui::SetCursorPosX((availWidth - textWidth) * 0.5f);
+        ImGui::Text("NO INFORMATION FOR THIS DATE");
+    }
     // Determine the process to highlight.
     // Priority: use the hovered table process, if available.
     std::string highlightProcess = hoveredTableProcess;
