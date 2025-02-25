@@ -32,6 +32,8 @@ set(SOURCES
         functions.h
         pie_chart.cpp
         pie_chart.h
+        heatmap.cpp
+        heatmap.h
 )
 
 # Build SQLite as a static library from the amalgamation source.

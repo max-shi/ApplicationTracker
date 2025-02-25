@@ -14,6 +14,7 @@
 #include <tracker.h>
 #include "pie_chart.h"
 #include "functions.h"
+#include "heatmap.h"
 
 #include <cstdio>   // for snprintf, sscanf
 #include <ctime>    // for std::tm, mktime
@@ -352,6 +353,9 @@ void load_ImGui() {
     ImGui::Begin("Calendar");
     DrawCalendar();
     ImGui::End();
+
+    // --- Heatmap Pane ---
+    DrawHeatMap(selectedDate);
 }
 
 //-----------------------------------------------------------------------------

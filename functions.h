@@ -20,7 +20,7 @@ std::vector<ApplicationData> getTopApplications(const std::string &startDate, co
 // Obtain the current timestamp, (used when the program is first launched)
 std::string getCurrentTimestamp();
 
-
+double getJulianDayFromDate(const std::string &date);
 std::string julianToCalendarString(double JD);
 void endActiveSessions();
 double getDaysTracked();

@@ -135,6 +135,30 @@ std::string getCurrentJulianDay() {
     return std::string(buf);
 }
 
+double getJulianDayFromDate(const std::string &date)
+{
+    std::tm tm = {};
+    std::istringstream ss(date);
+    ss >> std::get_time(&tm, "%Y-%m-%d");
+    if (ss.fail()) {
+        std::cerr << "Failed to parse date: " << date << std::endl;
+        return 0.0;
+    }
+    int year = tm.tm_year + 1900;
+    int month = tm.tm_mon + 1;
+    int day = tm.tm_mday;
+    if (month <= 2) {
+        year--;
+        month += 12;
+    }
+    int A = year / 100;
+    int B = 2 - A + (A / 4);
+    double JD = std::floor(365.25 * (year + 4716))
+              + std::floor(30.6001 * (month + 1))
+              + day + B - 1524.5;
+    return JD;
+}
+
 
 // std::string getCurrentTimestamp() {
 //     std::time_t now = std::time(nullptr);
