@@ -431,7 +431,7 @@ int main(int, char**)
     bool done = false;
     MSG msg;
     setDefaultTheme();
-    std::string programStartTime = getCurrentJulianDay();
+    std::string programStartTime = getCurrentJulianDayStr();
     printf(programStartTime.c_str());
     while (!done)
     {

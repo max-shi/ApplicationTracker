@@ -99,8 +99,27 @@ std::string julianToCalendarString(double JD) {
     return std::string(buf);
 }
 
-
-std::string getCurrentJulianDay() {
+double getCurrentJulianDay() {
+    std::time_t now = std::time(nullptr);
+    std::tm *lt = std::localtime(&now);
+    int year = lt->tm_year + 1900;
+    int month = lt->tm_mon + 1;
+    int day = lt->tm_mday;
+    int hour = lt->tm_hour;
+    int minute = lt->tm_min;
+    int second = lt->tm_sec;
+    if (month <= 2) {
+        year--;
+        month += 12;
+    }
+    int A = year / 100;
+    int B = 2 - A + (A / 4);
+    double dayFraction = (hour + (minute / 60.0) + (second / 3600.0)) / 24.0;
+    return std::floor(365.25 * (year + 4716))
+          + std::floor(30.6001 * (month + 1))
+          + day + dayFraction + B - 1524.5;
+}
+std::string getCurrentJulianDayStr() {
     // Get current time in local time.
     std::time_t now = std::time(nullptr);
     std::tm *lt = std::localtime(&now);

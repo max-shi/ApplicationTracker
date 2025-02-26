@@ -7,11 +7,13 @@
 #include <imgui.h>
 #include <string>
 
+#include "functions.h"
+
 
 ImVec4 getHeatMapColor(double percent);
 void DrawHeatMap(const std::string& selectedDate);
 std::array<double, 24> computeHourlyUsage(const std::string& selectedDate);
-
+std::vector<ApplicationData> getTopApplicationsTimeRange(double queryStart, double queryEnd);
 
 
 
