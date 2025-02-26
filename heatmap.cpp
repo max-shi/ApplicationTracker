@@ -210,8 +210,7 @@ void DrawHeatMap(const std::string& selectedDate) {
     // Get data for the selected date
     auto hourlyData = computeDetailedHourlyUsage(selectedDate);
 
-    // Instead of normalizing relative to the maximum observed usage,
-    // we use an absolute scale where 1.0 equals a full hour (60 minutes).
+    // Use a fixed maximum of 1.0 (i.e. 60 minutes) for scaling
     const double maxUsage = 1.0;
 
     // UI Constants
@@ -282,7 +281,9 @@ void DrawHeatMap(const std::string& selectedDate) {
             IM_COL32(200, 200, 200, 100), 1.0f);
     }
 
-    // Track if any hour is hovered
+    // Static variable to "lock" the breakdown display
+    static int lockedHour = -1;
+    // Track if any hour is hovered (temporary state)
     int hoveredHour = -1;
 
     // Draw bars for each hour
@@ -299,9 +300,16 @@ void DrawHeatMap(const std::string& selectedDate) {
         ImVec2 mousePos = ImGui::GetMousePos();
         bool isHovered = mousePos.x >= x && mousePos.x <= x + kBarWidth &&
                          mousePos.y >= barTop.y && mousePos.y <= barBottom.y;
-
         if (isHovered) {
             hoveredHour = hour;
+            // On click, toggle the locked hour (using left mouse button)
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left)) {
+                if (lockedHour == hour) {
+                    lockedHour = -1; // unlock if already locked
+                } else {
+                    lockedHour = hour; // lock this hour
+                }
+            }
         }
 
         // Background of the bar (subtle gray)
@@ -364,6 +372,9 @@ void DrawHeatMap(const std::string& selectedDate) {
         }
     }
 
+    // Determine which hour's breakdown to display: locked has priority over hover.
+    int displayHour = (lockedHour != -1) ? lockedHour : hoveredHour;
+
     // Draw x-axis labels (every 3 hours)
     for (int hour = 0; hour < 24; hour += 3) {
         char label[8];
@@ -387,31 +398,31 @@ void DrawHeatMap(const std::string& selectedDate) {
     // Reserve space for the chart in ImGui layout
     ImGui::Dummy(ImVec2(kTimelineWidth + kAxisPadding, kBarHeight + kAxisPadding + 20));
 
-    // Display details for hovered hour
-    if (hoveredHour >= 0) {
+    // Display details for the selected hour (either locked or hovered)
+    if (displayHour >= 0) {
         ImGui::Separator();
 
         // Format time range
         char timeRange[32];
-        if (hoveredHour == 0) {
+        if (displayHour == 0) {
             snprintf(timeRange, sizeof(timeRange), "12:00 AM - 1:00 AM");
-        } else if (hoveredHour == 12) {
+        } else if (displayHour == 12) {
             snprintf(timeRange, sizeof(timeRange), "12:00 PM - 1:00 PM");
-        } else if (hoveredHour < 12) {
-            snprintf(timeRange, sizeof(timeRange), "%d:00 AM - %d:00 AM", hoveredHour, hoveredHour + 1);
+        } else if (displayHour < 12) {
+            snprintf(timeRange, sizeof(timeRange), "%d:00 AM - %d:00 AM", displayHour, displayHour + 1);
         } else {
-            snprintf(timeRange, sizeof(timeRange), "%d:00 PM - %d:00 PM", hoveredHour - 12, hoveredHour - 12 + 1);
+            snprintf(timeRange, sizeof(timeRange), "%d:00 PM - %d:00 PM", displayHour - 12, displayHour - 12 + 1);
         }
 
         // Title with usage time
         char title[64];
-        int minutes = static_cast<int>(hourlyData[hoveredHour].totalUsage * 60);
+        int minutes = static_cast<int>(hourlyData[displayHour].totalUsage * 60);
         snprintf(title, sizeof(title), "%s · %d min", timeRange, minutes);
         ImGui::Text("%s", title);
 
         // App details
         ImGui::Spacing();
-        const auto& apps = hourlyData[hoveredHour].apps;
+        const auto& apps = hourlyData[displayHour].apps;
         if (!apps.empty()) {
             if (ImGui::BeginTable("HourDetails", 2, ImGuiTableFlags_BordersInnerH)) {
                 ImGui::TableSetupColumn("App", ImGuiTableColumnFlags_WidthStretch);
@@ -481,4 +492,5 @@ void DrawHeatMap(const std::string& selectedDate) {
 
     ImGui::End();
 }
+
 
