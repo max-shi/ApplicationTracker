@@ -210,13 +210,9 @@ void DrawHeatMap(const std::string& selectedDate) {
     // Get data for the selected date
     auto hourlyData = computeDetailedHourlyUsage(selectedDate);
 
-    // Calculate the maximum usage to normalize the chart
-    double maxUsage = 0;
-    for (const auto& hourData : hourlyData) {
-        maxUsage = std::max(maxUsage, hourData.totalUsage);
-    }
-    // Ensure we have a reasonable maximum (at least 0.25 = 15 minutes)
-    maxUsage = std::max(0.25, maxUsage);
+    // Instead of normalizing relative to the maximum observed usage,
+    // we use an absolute scale where 1.0 equals a full hour (60 minutes).
+    const double maxUsage = 1.0;
 
     // UI Constants
     const float kBarHeight = 150.0f;            // Maximum height of bars
@@ -292,7 +288,8 @@ void DrawHeatMap(const std::string& selectedDate) {
     // Draw bars for each hour
     for (int hour = 0; hour < 24; hour++) {
         float x = chartStart.x + hour * (kBarWidth + kBarSpacing);
-        float barHeight = kBarHeight * (hourlyData[hour].totalUsage / maxUsage);
+        // Scale based on absolute usage (where full hour = 1.0)
+        float barHeight = kBarHeight * hourlyData[hour].totalUsage;
 
         // Bar position
         ImVec2 barTop = ImVec2(x, chartStart.y + kBarHeight - barHeight);
