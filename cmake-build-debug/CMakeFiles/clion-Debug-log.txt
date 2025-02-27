@@ -12,6 +12,6 @@
 -- Detecting CXX compile features
 -- Detecting CXX compile features - done
 -- Found OpenGL: opengl32
--- Configuring done (1.7s)
+-- Configuring done (2.2s)
 -- Generating done (0.0s)
 -- Build files have been written to: C:/Users/Max/CLionProjects/tracker/cmake-build-debug

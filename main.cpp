@@ -356,6 +356,9 @@ void load_ImGui() {
 
     // --- Heatmap Pane ---
     DrawHeatMap(selectedDate);
+
+    // App Category Pane
+    DrawAppCategoryPane();
 }
 
 //-----------------------------------------------------------------------------
