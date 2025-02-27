@@ -4,7 +4,7 @@
 #include <psapi.h>
 #include <iostream>
 #include <string>
-
+// test
 // Global variables to store the last active window details and session id.
 static std::string lastProcessName = "";
 static std::string lastWindowTitle = "";
