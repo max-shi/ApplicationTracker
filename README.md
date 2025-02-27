@@ -40,7 +40,7 @@ The Application Tracker helps users understand their daily activity patterns by 
 ## Prerequisites
 
 - **CLion IDE** (or any C++ IDE that supports CMake)
-- **C++17 (or later) Compiler**
+- **C++ 17 (or later) Compiler**
 - **SQLite Development Libraries**
 - **OpenGL Development Libraries** (gl3w, etc.)
 - **Windows SDK**
@@ -50,8 +50,7 @@ The Application Tracker helps users understand their daily activity patterns by 
 1. **Clone the Repository:**
 
     ```bash
-    git clone https://github.com/yourusername/application-tracker.git
-    cd application-tracker
+    git clone https://github.com/max-shi/tracker.git
     ```
 
 2. **Open the Project in CLion:**
