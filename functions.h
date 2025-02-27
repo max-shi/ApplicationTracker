@@ -31,6 +31,7 @@ void checkActiveSessionIntegrity();
 std::string getNextDate(const std::string &date);
 std::string getPreviousDate(const std::string &date);
 void setDefaultTheme();
+std::vector<ApplicationData> getAllProcessUsage(const std::string &startDate = "", const std::string &endDate = "");
 // get total time in seconds from original timestamp
 double getTotalTimeTrackedCurrentRun(const std::string &startDate, const std::string &endDate = "");
 #endif // FUNCTIONS_H

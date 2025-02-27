@@ -1,4 +1,7 @@
 #include "functions.h"
+
+#include <algorithm>
+
 #include "database.h"      // Provides getDatabase() and ensures the DB is initialized.
 #include <sqlite3.h>
 #include <iostream>
@@ -8,7 +11,10 @@
 #include <cmath>
 #include <imgui.h>
 #include <iomanip>
+#include <unordered_map>
 #include <vector>
+
+#include "heatmap.h"
 
 // Implementation of getCurrentTrackedApplication:
 // It queries the ActivitySession table for the active session (where endTime is NULL).
@@ -185,6 +191,77 @@ double getJulianDayFromDate(const std::string &date)
 //     std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
 //     return std::string(buf);
 // }
+std::vector<ApplicationData> getAllProcessUsage(const std::string &startDate , const std::string &endDate ) {
+    std::vector<ApplicationData> results;
+    sqlite3* dbHandle = getDatabase();
+    if (!dbHandle) {
+        std::cerr << "Database not initialized.\n";
+        return results;
+    }
+
+    // SQL for ALL-TIME (no date filter) without LIMIT.
+    const char* sqlAllTime = R"(
+        SELECT processName, COALESCE(SUM(
+            CASE
+                WHEN endTime IS NOT NULL THEN (julianday(endTime) - julianday(startTime))
+                ELSE (julianday('now','localtime') - julianday(startTime))
+            END
+        ), 0) as total_time
+        FROM ActivitySession
+        GROUP BY processName
+        ORDER BY total_time DESC;
+    )";
+
+    // SQL for a specific date range (startDate inclusive, endDate exclusive) without LIMIT.
+    const char* sqlDateRange = R"(
+        SELECT processName, COALESCE(SUM(
+            CASE
+                WHEN endTime IS NOT NULL THEN (julianday(endTime) - julianday(startTime))
+                ELSE (julianday('now','localtime') - julianday(startTime))
+            END
+        ), 0) as total_time
+        FROM ActivitySession
+        WHERE julianday(startTime) >= julianday(?)
+          AND julianday(startTime) < julianday(?)
+        GROUP BY processName
+        ORDER BY total_time DESC;
+    )";
+
+    sqlite3_stmt* stmt = nullptr;
+    int rc;
+    if (endDate.empty()) {
+        // Use all-time query.
+        rc = sqlite3_prepare_v2(dbHandle, sqlAllTime, -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare all-time query in getAllProcessUsage: "
+                      << sqlite3_errmsg(dbHandle) << std::endl;
+            return results;
+        }
+    } else {
+        // Use date-range query. Bind startDate and endDate.
+        rc = sqlite3_prepare_v2(dbHandle, sqlDateRange, -1, &stmt, nullptr);
+        if (rc != SQLITE_OK) {
+            std::cerr << "Failed to prepare date range query in getAllProcessUsage: "
+                      << sqlite3_errmsg(dbHandle) << std::endl;
+            return results;
+        }
+        sqlite3_bind_text(stmt, 1, startDate.c_str(), -1, SQLITE_TRANSIENT);
+        sqlite3_bind_text(stmt, 2, endDate.c_str(), -1, SQLITE_TRANSIENT);
+    }
+
+    // Process each row in the result.
+    while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
+        ApplicationData app;
+        const unsigned char* procName = sqlite3_column_text(stmt, 0);
+        double totalDays = sqlite3_column_double(stmt, 1);
+        app.processName = procName ? reinterpret_cast<const char*>(procName) : "";
+        // Convert days to seconds.
+        app.totalTime = totalDays * 86400.0;
+        results.push_back(app);
+    }
+    sqlite3_finalize(stmt);
+    return results;
+}
 
 // Retrieve the top 10 applications (by processName) since programStartTime.
 std::vector<ApplicationData> getTopApplications(const std::string &startDate, const std::string &endDate) {
@@ -463,6 +540,12 @@ void checkActiveSessionIntegrity() {
         sqlite3_finalize(updateStmt);
     }
 }
+
+
+
+// Function to get aggregated usage for each process.
+// This is a placeholder. You might want to query your database to get a complete list.
+
 
 
 // GUI nonsense

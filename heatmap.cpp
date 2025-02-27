@@ -14,6 +14,14 @@
 #include <iostream>
 #include <unordered_map>
 
+
+static std::unordered_map<std::string, std::string> g_processCategoryMapping;
+
+static const std::vector<std::string> availableCategories = {
+    "Productivity", "Entertainment", "Social", "Communication", "Reading", "Creativity", "Other"
+};
+
+
 std::vector<ApplicationData> getTopApplicationsTimeRange(double queryStart, double queryEnd) {
     std::vector<ApplicationData> results;
     sqlite3* db = getDatabase();
@@ -95,10 +103,7 @@ std::vector<ApplicationData> getHourlyApplicationData(const std::string& selecte
 }
 
 // Compute hourly usage with app category information
-struct HourlyUsageData {
-    double totalUsage;                    // Total usage as fraction of hour (0.0-1.0)
-    std::vector<ApplicationData> apps;    // Top apps used in this hour
-};
+
 
 std::array<HourlyUsageData, 24> computeDetailedHourlyUsage(const std::string& selectedDate) {
     std::array<HourlyUsageData, 24> usage{};
@@ -197,8 +202,16 @@ const std::array<CategoryColor, 7> categoryColors = {{
 
 // Get color for a specific app (based on category)
 ImU32 getAppColor(const std::string& appName) {
-    // In a real implementation, you would categorize apps
-    // For now, we'll use a simple hash-based approach for demonstration
+    // Check if the user has assigned a category.
+    auto it = g_processCategoryMapping.find(appName);
+    if (it != g_processCategoryMapping.end()) {
+        // Find the category in our categoryColors array.
+        for (const auto& category : categoryColors) {
+            if (it->second == category.category)
+                return category.color;
+        }
+    }
+    // Fallback: use hash-based default.
     size_t hash = std::hash<std::string>{}(appName);
     return categoryColors[hash % categoryColors.size()].color;
 }
@@ -490,6 +503,59 @@ void DrawHeatMap(const std::string& selectedDate) {
         }
     }
 
+    ImGui::End();
+
+}
+
+// Draws a pane for the user to assign categories to processes.
+void DrawAppCategoryPane() {
+    ImGui::Begin("App Category Assignment");
+
+    // Fetch all processes (aggregated usage across all time).
+    auto processList = getAllProcessUsage();
+
+    if (ImGui::BeginTable("ProcessTable", 3, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg)) {
+        ImGui::TableSetupColumn("Application", ImGuiTableColumnFlags_WidthStretch);
+        ImGui::TableSetupColumn("Time");
+        ImGui::TableSetupColumn("Category");
+        ImGui::TableHeadersRow();
+
+        for (const auto& app : processList) {
+            ImGui::TableNextRow();
+
+            // Application Name Column.
+            ImGui::TableSetColumnIndex(0);
+            ImGui::Text("%s", app.processName.c_str());
+
+            // Time Column (formatted, e.g., "12:34").
+            ImGui::TableSetColumnIndex(1);
+            ImGui::Text("%s", formatTime(app.totalTime).c_str());
+
+            // Category Column with a Combo Box.
+            ImGui::TableSetColumnIndex(2);
+            // Get current category for this process; default to "Other" if none.
+            std::string currentCategory = "Other";
+            auto it = g_processCategoryMapping.find(app.processName);
+            if (it != g_processCategoryMapping.end())
+                currentCategory = it->second;
+
+            // Create a unique ID for each combo box.
+            std::string comboId = "##" + app.processName;
+            if (ImGui::BeginCombo(comboId.c_str(), currentCategory.c_str())) {
+                for (const auto& category : availableCategories) {
+                    bool isSelected = (currentCategory == category);
+                    if (ImGui::Selectable(category.c_str(), isSelected)) {
+                        // Update the mapping when the user selects a category.
+                        g_processCategoryMapping[app.processName] = category;
+                    }
+                    if (isSelected)
+                        ImGui::SetItemDefaultFocus();
+                }
+                ImGui::EndCombo();
+            }
+        }
+        ImGui::EndTable();
+    }
     ImGui::End();
 }
 
