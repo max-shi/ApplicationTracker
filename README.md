@@ -51,7 +51,7 @@ The Application Tracker helps users understand their daily activity patterns by 
 1. **Clone the Repository:**
 
     ```bash
-    git clone https://github.com/max-shi/tracker.git
+    git clone https://github.com/max-shi/ApplicationTracker.git
     ```
 
 2. **Open the Project in CLion:**
