@@ -1,6 +1,7 @@
 # Application Tracker
 
 A Windows desktop application that tracks website and application usage. This tool logs user sessions in an SQLite database and presents activity data with an interactive IMGUI-based interface. In the long term, the application is designed to integrate with a Chrome extension to provide in-depth tracking of user activity.
+Libraries have been included for ease of building (may be deprecated in the future)
 
 ## Overview
 
@@ -64,6 +65,9 @@ The Application Tracker helps users understand their daily activity patterns by 
 
 5. **Run the Application:**
    - After a successful build, run the application directly from CLion. The program will create or connect to an SQLite database (e.g., `activity_log.db`) in the project directory.
+
+![image](https://github.com/user-attachments/assets/2771d370-77b0-42cb-a6d8-526668dd971a)
+
 
 ## Running the Application
 
